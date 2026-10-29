@@ -1,0 +1,3178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watermark Studio</title>
+<meta name="description" content="Add text or logo watermarks to PDF, images, Word and PowerPoint files, and convert between formats. Everything runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,400;0,700;1,400;1,700&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Slab:wght@400;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   THEME TOKENS
+   ========================================================= */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --panel-2:#f8f7f4; --line:#e5e1d9; --line-2:#d3cec4;
+  --text:#1c1b19; --muted:#67635c; --faint:#9a958c;
+  --accent:#3445d4; --accent-2:#2735b5; --accent-soft:#e9ebfd; --on-accent:#ffffff;
+  --good:#17784a; --good-soft:#e1f3e9; --warn:#9a5a00; --warn-soft:#fcefd9; --bad:#c22a2a; --bad-soft:#fce6e6;
+  --stage:#e6e2da; --stage-dot:#d8d3c9; --paper-shadow:0 2px 6px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.10);
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.06);
+  --radius:12px; --radius-sm:8px;
+  --ui:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131417; --panel:#1b1c20; --panel-2:#212227; --line:#2d2f35; --line-2:#3b3e46;
+    --text:#ecebe7; --muted:#a6a39c; --faint:#77746d;
+    --accent:#8190ff; --accent-2:#9aa6ff; --accent-soft:#262b52; --on-accent:#0d0f22;
+    --good:#5fd394; --good-soft:#15301f; --warn:#f2b660; --warn-soft:#382811; --bad:#ff7d7d; --bad-soft:#3a1a1a;
+    --stage:#0e0f11; --stage-dot:#1d1f23; --paper-shadow:0 2px 8px rgba(0,0,0,.5),0 16px 40px rgba(0,0,0,.45);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131417; --panel:#1b1c20; --panel-2:#212227; --line:#2d2f35; --line-2:#3b3e46;
+  --text:#ecebe7; --muted:#a6a39c; --faint:#77746d;
+  --accent:#8190ff; --accent-2:#9aa6ff; --accent-soft:#262b52; --on-accent:#0d0f22;
+  --good:#5fd394; --good-soft:#15301f; --warn:#f2b660; --warn-soft:#382811; --bad:#ff7d7d; --bad-soft:#3a1a1a;
+  --stage:#0e0f11; --stage-dot:#1d1f23; --paper-shadow:0 2px 8px rgba(0,0,0,.5),0 16px 40px rgba(0,0,0,.45);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--ui);-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+.top{height:60px;display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:5}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-.01em;white-space:nowrap}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:800;font-size:13px;transform:rotate(-8deg)}
+.steps{display:flex;align-items:center;gap:4px;margin:0 auto;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:4px}
+.step{display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:6px 14px 6px 6px;border-radius:999px;color:var(--muted);font-weight:500;white-space:nowrap}
+.step .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--muted);font-size:12px;font-weight:700}
+.step.done .n{background:var(--good);color:#fff}
+.step.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+.step.on .n{background:var(--accent);color:var(--on-accent)}
+.step-sep{width:14px;height:1px;background:var(--line-2)}
+.top-actions{display:flex;align-items:center;gap:6px}
+.privacy{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--good);background:var(--good-soft);padding:5px 10px;border-radius:999px;white-space:nowrap}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid transparent;background:transparent;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:hover:not(:disabled){background:var(--panel-2);border-color:var(--line);color:var(--text)}
+.icon-btn:disabled{opacity:.35;cursor:default}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+.layout{display:grid;grid-template-columns:290px minmax(0,1fr) 350px;height:calc(100% - 60px - 64px)}
+.panel{background:var(--panel);overflow:auto;min-height:0}
+.files{border-right:1px solid var(--line);display:flex;flex-direction:column}
+.settings{border-left:1px solid var(--line)}
+.center{display:flex;flex-direction:column;min-width:0;min-height:0}
+.bottom{height:64px;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--panel);border-top:1px solid var(--line)}
+.bottom .summary{color:var(--muted);font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* =========================================================
+   BUTTONS & CONTROLS
+   ========================================================= */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--line-2);background:var(--panel);font-weight:600;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--faint)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover:not(:disabled){background:var(--accent-2);border-color:var(--accent-2)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover:not(:disabled){background:var(--panel-2);color:var(--text)}
+.btn.small{min-height:32px;padding:0 10px;font-size:13px;border-radius:8px}
+.btn.danger{color:var(--bad)}
+.btn.block{width:100%}
+
+.seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:transparent;padding:7px 8px;border-radius:7px;color:var(--muted);font-weight:500;font-size:13px;min-height:34px}
+.seg button.on{background:var(--panel);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:600}
+
+.field{margin:0 0 14px}
+.field > label, .lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.lbl output{font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+input[type=text],textarea,select,input[type=number]{width:100%;border:1px solid var(--line-2);background:var(--panel);border-radius:9px;padding:9px 11px;min-height:40px;outline:none}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea{resize:vertical;min-height:62px;line-height:1.35}
+input[type=range]{width:100%;accent-color:var(--accent);height:24px;margin:0}
+input[type=color]{width:40px;height:34px;padding:0;border:1px solid var(--line-2);border-radius:8px;background:var(--panel)}
+.check{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;min-height:32px}
+.check input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.row{display:flex;gap:8px;align-items:center}
+.row > *{min-width:0}
+.grow{flex:1}
+.hint{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.4}
+.hint.warn{color:var(--warn)}
+.hint.bad{color:var(--bad)}
+.chip{border:1px solid var(--line-2);background:var(--panel);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;min-height:30px}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.tag.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.q{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.q-best{background:var(--good-soft);color:var(--good)}
+.q-good{background:var(--accent-soft);color:var(--accent)}
+.q-basic{background:var(--warn-soft);color:var(--warn)}
+
+/* =========================================================
+   FILES PANEL
+   ========================================================= */
+.files-head{padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between}
+.files-head h2,.set-head h2{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.drop{margin:0 16px 12px;border:1.5px dashed var(--line-2);border-radius:var(--radius);padding:18px 14px;text-align:center;background:var(--panel-2);cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop strong{display:block;font-size:14px;margin:6px 0 2px}
+.drop span{font-size:12px;color:var(--muted)}
+.drop .up{width:38px;height:38px;border-radius:50%;background:var(--panel);display:grid;place-items:center;margin:0 auto;color:var(--accent);box-shadow:var(--shadow)}
+.flist{list-style:none;margin:0;padding:0 8px 12px;flex:1;overflow:auto}
+.fitem{display:flex;gap:10px;align-items:center;padding:8px;border-radius:10px;border:1px solid transparent;cursor:pointer;position:relative;background:var(--panel)}
+.fitem:hover{background:var(--panel-2)}
+.fitem.on{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.fitem.dragging{opacity:.5}
+.fitem .grip{color:var(--faint);cursor:grab;touch-action:none;padding:4px 0;display:grid;place-items:center}
+.fthumb{width:44px;height:44px;border-radius:6px;background:var(--panel-2);border:1px solid var(--line);flex:none;display:grid;place-items:center;overflow:hidden;font-size:10px;font-weight:700;color:var(--muted)}
+.fthumb canvas{max-width:100%;max-height:100%;display:block}
+.fmeta{flex:1;min-width:0}
+.fname{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fsub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ftags{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}
+.fitem .rm{opacity:.0;transition:.1s}
+.fitem:hover .rm,.fitem.on .rm{opacity:1}
+@media (hover:none){.fitem .rm{opacity:1}}
+.files-foot{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--accent);animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* =========================================================
+   PREVIEW
+   ========================================================= */
+.pbar{height:52px;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+.pbar .title{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;padding:0 6px}
+.pager{display:flex;align-items:center;gap:2px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pager span{min-width:62px;text-align:center}
+.vsep{width:1px;height:24px;background:var(--line);margin:0 4px}
+.zoomv{min-width:46px;text-align:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.toggle-ba{display:flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:999px;padding:4px 10px 4px 4px;background:var(--panel);font-size:12px;font-weight:600;min-height:32px}
+.toggle-ba .knob{width:30px;height:18px;border-radius:999px;background:var(--accent);position:relative;transition:.15s}
+.toggle-ba .knob::after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:14px;transition:.15s}
+.toggle-ba.before .knob{background:var(--line-2)}
+.toggle-ba.before .knob::after{left:2px}
+.stage{flex:1;min-height:0;overflow:auto;position:relative;background-color:var(--stage);background-image:radial-gradient(var(--stage-dot) 1px,transparent 1px);background-size:18px 18px;display:flex}
+.stage-inner{margin:auto;padding:24px;position:relative}
+#pv{display:block;background:#fff;box-shadow:var(--paper-shadow);border-radius:2px}
+.badge-float{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--muted);width:max-content;max-width:calc(100% - 24px);text-align:center;pointer-events:none;z-index:2}
+.stage-msg{margin:auto;text-align:center;max-width:420px;padding:32px;color:var(--muted)}
+.stage-msg h3{color:var(--text);margin:14px 0 6px;font-size:18px}
+.stage-msg .big{width:64px;height:64px;border-radius:18px;background:var(--panel);display:grid;place-items:center;margin:0 auto;box-shadow:var(--shadow);color:var(--accent)}
+.stage-msg .big svg{width:30px;height:30px}
+.formats{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}
+.strip{height:132px;border-top:1px solid var(--line);background:var(--panel);display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:10px 12px;align-items:flex-start}
+.strip:empty{display:none}
+.th{flex:none;width:84px;cursor:pointer;text-align:center;position:relative}
+.th .box{height:92px;display:grid;place-items:center;border-radius:6px;border:2px solid transparent;background:var(--panel-2);overflow:hidden}
+.th.cur .box{border-color:var(--accent)}
+.th canvas{max-width:100%;max-height:88px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.th .num{font-size:11px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.th .mk{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);box-shadow:0 1px 3px rgba(0,0,0,.25);padding:0}
+.th .mk svg{width:14px;height:14px;stroke-width:2.6}
+.th.off .mk{background:var(--panel);color:var(--faint);border:1px solid var(--line-2)}
+.th.off canvas{opacity:.55}
+
+/* =========================================================
+   SETTINGS PANEL
+   ========================================================= */
+.set-head{padding:16px 16px 8px}
+.scope{padding:0 16px 12px;border-bottom:1px solid var(--line)}
+.sec{border-bottom:1px solid var(--line)}
+.sec > summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;font-weight:700;cursor:pointer;user-select:none}
+.sec > summary::-webkit-details-marker{display:none}
+.sec > summary .ico{width:28px;height:28px;border-radius:8px;background:var(--panel-2);display:grid;place-items:center;color:var(--accent)}
+.sec > summary .chev{margin-left:auto;color:var(--faint);transition:.15s}
+.sec[open] > summary .chev{transform:rotate(180deg)}
+.sec-body{padding:2px 16px 16px}
+.var-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.var-chips button{border:1px dashed var(--line-2);background:transparent;border-radius:6px;font-size:11px;padding:3px 7px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace}
+.var-chips button:hover{border-color:var(--accent);color:var(--accent)}
+.toggles{display:flex;gap:6px}
+.tbtn{min-width:40px;height:38px;border-radius:9px;border:1px solid var(--line-2);background:var(--panel);font-weight:700;padding:0 10px}
+.tbtn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line-2);padding:0}
+.sw.on{box-shadow:0 0 0 2px var(--accent)}
+.orient{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.orient button{border:1px solid var(--line-2);background:var(--panel);border-radius:10px;padding:8px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted);font-weight:600;min-height:64px}
+.orient button .demo{width:34px;height:28px;display:grid;place-items:center}
+.orient button .demo b{display:block;font-size:12px;color:var(--text);letter-spacing:.02em}
+.orient button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.grid9{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:132px;padding:6px;border:1px solid var(--line-2);border-radius:10px;background:var(--panel-2)}
+.grid9 button{height:34px;border:0;border-radius:6px;background:var(--panel);display:grid;place-items:center;padding:0}
+.grid9 button::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.grid9 button.on{background:var(--accent-soft)}
+.grid9 button.on::after{background:var(--accent);width:10px;height:10px}
+.logo-box{display:flex;gap:10px;align-items:center;border:1px solid var(--line-2);border-radius:10px;padding:8px;background:var(--panel-2)}
+.logo-box .lp{width:52px;height:52px;border-radius:8px;background:repeating-conic-gradient(var(--line) 0 25%,var(--panel) 0 50%) 0 0/12px 12px;display:grid;place-items:center;overflow:hidden;flex:none}
+.logo-box .lp img{max-width:100%;max-height:100%}
+.presetlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.preset{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:9px;padding:4px 4px 4px 10px;font-size:13px}
+.preset .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.set-foot{padding:16px;display:flex;flex-direction:column;gap:12px}
+.fmt-opt{display:flex;flex-direction:column;gap:6px}
+.fmt-row{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line-2);border-radius:10px;padding:9px 10px;cursor:pointer}
+.fmt-row.on{border-color:var(--accent);background:var(--accent-soft)}
+.fmt-row input{margin:3px 0 0;accent-color:var(--accent)}
+.fmt-row .t{font-weight:600;font-size:13px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fmt-row .d{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.35}
+.disabled-block{opacity:.5;pointer-events:none}
+.subhead{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:16px 0 8px}
+
+/* =========================================================
+   DIALOGS, TOASTS
+   ========================================================= */
+dialog{border:0;padding:0;border-radius:16px;background:var(--panel);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.35);width:min(680px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(10,10,14,.45)}
+.dlg{display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.dlg-h{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.dlg-h h3{margin:0;font-size:17px;flex:1}
+.dlg-b{padding:16px 18px;overflow:auto}
+.dlg-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.xrow{display:grid;grid-template-columns:minmax(0,1fr) 200px 26px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.xrow:last-child{border-bottom:0}
+.xrow .nm{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xrow .sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xrow .sub.bad{color:var(--bad);white-space:normal}
+.xrow select{min-height:36px;padding:6px 8px;font-size:13px}
+.st{width:24px;height:24px;display:grid;place-items:center}
+.st.ok{color:var(--good)} .st.err{color:var(--bad)}
+.progress{height:8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden;margin:14px 0 6px}
+.progress div{height:100%;width:0;background:var(--accent);transition:width .2s}
+.plabel{font-size:12px;color:var(--muted)}
+.results{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.res{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.res .nm{flex:1;min-width:0;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .sz{font-size:12px;color:var(--muted)}
+.res.err{border-color:var(--bad-soft);background:var(--bad-soft)}
+.res.err .nm{white-space:normal}
+.kbd{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:var(--panel-2)}
+.help-table{width:100%;border-collapse:collapse;font-size:13px}
+.help-table td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.help-table td:first-child{width:45%}
+.toasts{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:100;width:min(440px,calc(100vw - 24px));pointer-events:none}
+.toast{background:var(--text);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);pointer-events:auto;animation:tin .2s ease-out}
+.toast.bad{background:var(--bad);color:#fff}
+.toast.warn{background:var(--warn);color:#fff}
+.toast.good{background:var(--good);color:#fff}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}}
+.dropveil{position:fixed;inset:0;background:color-mix(in srgb,var(--accent) 18%,transparent);border:3px dashed var(--accent);z-index:90;display:none;place-items:center;font-size:20px;font-weight:700;color:var(--accent);backdrop-filter:blur(2px)}
+.dropveil.show{display:grid}
+.libbanner{display:none;background:var(--bad-soft);color:var(--bad);padding:8px 16px;font-size:13px;border-bottom:1px solid var(--line)}
+.libbanner.show{display:block}
+
+/* offscreen rendering area for Word pages */
+.render-host{position:fixed;left:-30000px;top:0;pointer-events:none}
+.wm-doc{background:#fff;color:#000;font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:14.67px;line-height:1.25;box-sizing:border-box;overflow:hidden}
+.wm-doc p{margin:0 0 10px}
+.wm-doc h1{font-size:26px;margin:14px 0 10px}.wm-doc h2{font-size:21px;margin:12px 0 8px}.wm-doc h3{font-size:18px;margin:10px 0 6px}.wm-doc h4,.wm-doc h5,.wm-doc h6{font-size:15px;margin:8px 0 6px}
+.wm-doc table{border-collapse:collapse;width:100%;margin:0 0 10px;table-layout:fixed}
+.wm-doc td,.wm-doc th{border:1px solid #888;padding:4px 6px;vertical-align:top;word-wrap:break-word}
+.wm-doc td p,.wm-doc th p{margin:0}
+.wm-doc img{max-width:100%;height:auto}
+.wm-doc ul,.wm-doc ol{margin:0 0 6px;padding-left:28px}
+.wm-doc a{color:#1155cc}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+.mobile-tabs{display:none}
+@media (max-width: 1100px){
+  .layout{grid-template-columns:250px minmax(0,1fr) 320px}
+  .privacy span{display:none}
+}
+@media (max-width: 900px){
+  body{overflow:auto}
+  .top{height:auto;flex-wrap:wrap;padding:10px 16px;gap:10px}
+  .steps{order:3;width:100%;justify-content:space-between}
+  .step{padding:5px 10px 5px 5px;font-size:12px}
+  .step-sep{display:none}
+  .brand{flex:1}
+  .layout{display:block;height:auto}
+  .files,.settings{border:0}
+  body[data-view="files"] .center, body[data-view="files"] .settings{display:none}
+  body[data-view="design"] .files{display:none}
+  .center{height:62vh;min-height:360px}
+  .settings{overflow:visible}
+  .bottom{position:sticky;bottom:0;z-index:4}
+  .flist{max-height:none}
+  .fitem .rm{opacity:1}
+  .pbar{overflow-x:auto}
+  .pbar .title{display:none}
+  .xrow{grid-template-columns:minmax(0,1fr) 26px}
+  .xrow select{grid-column:1 / -1;grid-row:2}
+}
+</style>
+</head>
+<body data-view="files">
+
+<!-- ================= TOP BAR ================= -->
+<header class="top">
+  <div class="brand"><div class="brand-mark">WS</div><span>Watermark Studio</span></div>
+  <nav class="steps" aria-label="Steps">
+    <button class="step on" data-step="1"><span class="n">1</span>Add files</button>
+    <span class="step-sep"></span>
+    <button class="step" data-step="2"><span class="n">2</span>Design watermark</button>
+    <span class="step-sep"></span>
+    <button class="step" data-step="3"><span class="n">3</span>Export</button>
+  </nav>
+  <div class="top-actions">
+    <div class="privacy" title="All processing happens inside your browser. Nothing is uploaded."><svg class="i" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Your files never leave your device</span></div>
+    <button class="icon-btn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"><svg class="i" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+    <button class="icon-btn" id="redoBtn" title="Redo (Ctrl+Y)" aria-label="Redo"><svg class="i" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+    <button class="icon-btn" id="themeBtn" title="Theme" aria-label="Change theme"></button>
+    <button class="icon-btn" id="helpBtn" title="Help & shortcuts (?)" aria-label="Help"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.2-2.5 3.8"/><path d="M12 17.5h.01"/></svg></button>
+  </div>
+</header>
+<div class="libbanner" id="libBanner"></div>
+
+<!-- ================= MAIN LAYOUT ================= -->
+<main class="layout">
+
+  <!-- FILES -->
+  <aside class="panel files" aria-label="Files">
+    <div class="files-head"><h2>Files</h2><button class="btn ghost small" id="clearAll" hidden>Clear all</button></div>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Add files">
+      <div class="up"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div>
+      <strong>Drop files or click to browse</strong>
+      <span>PDF, JPG, PNG, SVG, WEBP, Word, PowerPoint, TXT</span>
+    </div>
+    <input type="file" id="fileInput" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.svg,.webp,.doc,.docx,.ppt,.pptx,.txt,image/*,application/pdf">
+    <ul class="flist" id="flist"></ul>
+    <div class="files-foot" id="filesFoot" hidden><span id="filesCount"></span><span>Drag <svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px;vertical-align:-1px"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg> to reorder</span></div>
+  </aside>
+
+  <!-- PREVIEW -->
+  <section class="center" aria-label="Preview">
+    <div class="pbar">
+      <div class="title" id="pvTitle">Preview</div>
+      <div class="pager">
+        <button class="icon-btn" id="prevPg" title="Previous page (←)" aria-label="Previous page"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span id="pgLabel">–</span>
+        <button class="icon-btn" id="nextPg" title="Next page (→)" aria-label="Next page"><svg class="i" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+      <span class="vsep"></span>
+      <button class="icon-btn" id="zoomOut" title="Zoom out (−)" aria-label="Zoom out"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6"/></svg></button>
+      <span class="zoomv" id="zoomLabel">Fit</span>
+      <button class="icon-btn" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6M11 8v6"/></svg></button>
+      <button class="icon-btn" id="zoomFit" title="Fit to screen (0)" aria-label="Fit to screen"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>
+      <span class="vsep"></span>
+      <button class="toggle-ba" id="baBtn" title="Show before / after (B)"><span class="knob"></span><span id="baLabel">With watermark</span></button>
+    </div>
+    <div class="stage" id="stage">
+      <div class="stage-msg" id="stageMsg">
+        <div class="big"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 15 6-4"/></svg></div>
+        <h3>Add files to get started</h3>
+        <div>Drop one or many files anywhere on this page. You can mix types and watermark them all at once.</div>
+        <div class="formats"><span class="tag">PDF</span><span class="tag">JPG</span><span class="tag">PNG</span><span class="tag">SVG</span><span class="tag">WEBP</span><span class="tag">DOCX</span><span class="tag">PPTX</span><span class="tag">TXT</span></div>
+        <div style="margin-top:16px"><button class="btn primary" id="emptyAdd">Choose files</button></div>
+      </div>
+      <div class="stage-inner" id="stageInner" hidden>
+        <div class="badge-float" id="pvBadge" hidden></div>
+        <canvas id="pv" aria-label="Page preview"></canvas>
+      </div>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <aside class="panel settings" id="settings" aria-label="Watermark settings">
+    <div class="set-head"><h2>Watermark</h2></div>
+    <div class="scope">
+      <div class="seg" id="scopeSeg">
+        <button data-scope="all" class="on">All files</button>
+        <button data-scope="one">This file only</button>
+      </div>
+      <p class="hint" id="scopeHint">Changes apply to every file.</p>
+      <div class="lbl" style="margin-top:12px">Quick presets</div>
+      <div class="chips" id="quickPresets"></div>
+    </div>
+
+    <details class="sec" open>
+      <summary><span class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg></span>Content<svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="sec-body">
+        <div class="field">
+          <div class="seg" data-seg="type">
+            <button data-v="text">Text</button><button data-v="logo">Logo</button><button data-v="both">Text + logo</button>
+          </div>
+        </div>
+        <div class="field" data-show="text">
+          <label for="wmText">Text</label>
+          <textarea id="wmText" data-k="text" rows="2" placeholder="e.g. CONFIDENTIAL"></textarea>
+          <div class="var-chips" id="varChips">
+            <button data-var="{filename}" title="File name without extension">{filename}</button>
+            <button data-var="{date}" title="Today's date">{date}</button>
+            <button data-var="{time}" title="Current time">{time}</button>
+            <button data-var="{page}" title="Page number">{page}</button>
+            <button data-var="{totalPages}" title="Number of pages">{totalPages}</button>
+          </div>
+          <p class="hint">Tap a tag to insert it. Use a new line for a second line of text.</p>
+        </div>
+        <div class="field" data-show="logo">
+          <label>Logo</label>
+          <div class="logo-box" id="logoBox">
+            <div class="lp" id="logoPrev"><svg class="i" viewBox="0 0 24 24" style="color:var(--faint)"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></div>
+            <div class="grow" style="min-width:0">
+              <div class="fname" id="logoName">No logo yet</div>
+              <div class="row" style="margin-top:6px">
+                <button class="btn small" id="logoPick">Upload logo</button>
+                <button class="btn small ghost danger" id="logoRemove" hidden>Remove</button>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="logoInput" hidden accept="image/png,image/jpeg,image/svg+xml,image/webp">
+          <p class="hint">PNG with a transparent background looks best.</p>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary><span class="ico"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2-1.5h2a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></span>Style<svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="sec-body">
+        <div data-show="text">
+          <div class="field"><label for="fontSel">Font</label><select id="fontSel" data-k="font"></select></div>
+          <div class="field"><div class="lbl">Text size <output data-out="size"></output></div><input type="range" min="8" max="220" step="1" data-k="size"></div>
+          <div class="field">
+            <div class="lbl">Text style</div>
+            <div class="toggles">
+              <button class="tbtn" data-toggle="bold" title="Bold"><b>B</b></button>
+              <button class="tbtn" data-toggle="italic" title="Italic"><i style="font-family:Georgia,serif">I</i></button>
+              <button class="tbtn" data-toggle="outline" title="Outline only" style="font-weight:800;-webkit-text-stroke:1px currentColor;color:transparent">A</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="lbl">Color</div>
+            <div class="swatches" id="swatches"></div>
+          </div>
+          <div class="field"><div class="lbl">Text opacity <output data-out="opacity"></output></div><input type="range" min="0" max="100" step="1" data-k="opacity"></div>
+        </div>
+        <div data-show="logo">
+          <div class="field"><div class="lbl">Logo size <output data-out="logoSize"></output></div><input type="range" min="3" max="100" step="1" data-k="logoSize"></div>
+          <div class="field"><div class="lbl">Logo opacity <output data-out="logoOpacity"></output></div><input type="range" min="0" max="100" step="1" data-k="logoOpacity"></div>
+          <label class="check"><input type="checkbox" data-k="grayscale"> Make logo black &amp; white</label>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary><span class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg></span>Position<svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="sec-body">
+        <div class="field">
+          <div class="lbl">Direction</div>
+          <div class="orient" id="orient">
+            <button data-rot="0"><span class="demo"><b>Aa</b></span>Horizontal</button>
+            <button data-rot="90"><span class="demo"><b style="transform:rotate(-90deg)">Aa</b></span>Vertical</button>
+            <button data-rot="45"><span class="demo"><b style="transform:rotate(-45deg)">Aa</b></span>Diagonal ↗</button>
+            <button data-rot="-45"><span class="demo"><b style="transform:rotate(45deg)">Aa</b></span>Diagonal ↘</button>
+          </div>
+        </div>
+        <div class="field"><div class="lbl">Custom angle <output data-out="rotation"></output></div><input type="range" min="-180" max="180" step="1" data-k="rotation"></div>
+        <div class="field">
+          <div class="lbl">Layout</div>
+          <div class="seg" data-seg="layout"><button data-v="single">Single</button><button data-v="tile">Repeated (tiled)</button></div>
+        </div>
+        <div data-show-layout="single">
+          <div class="field">
+            <div class="lbl">Place on page</div>
+            <div class="row" style="gap:14px;align-items:flex-start">
+              <div class="grid9" id="grid9"></div>
+              <div class="grow"><div class="lbl">Edge margin <output data-out="margin"></output></div><input type="range" min="0" max="30" step="1" data-k="margin"></div>
+            </div>
+          </div>
+        </div>
+        <div data-show-layout="tile">
+          <div class="field"><div class="lbl">Horizontal spacing <output data-out="gapX"></output></div><input type="range" min="0" max="400" step="2" data-k="gapX"></div>
+          <div class="field"><div class="lbl">Vertical spacing <output data-out="gapY"></output></div><input type="range" min="0" max="400" step="2" data-k="gapY"></div>
+          <label class="check" style="margin-bottom:12px"><input type="checkbox" data-k="stagger"> Shift every other row (brick pattern)</label>
+        </div>
+        <div class="field"><div class="lbl">Move left / right <output data-out="offsetX"></output></div><input type="range" min="-50" max="50" step="0.5" data-k="offsetX"></div>
+        <div class="field"><div class="lbl">Move up / down <output data-out="offsetY"></output></div><input type="range" min="-50" max="50" step="0.5" data-k="offsetY"></div>
+        <div class="field">
+          <div class="lbl">Layer</div>
+          <div class="seg" data-seg="layer"><button data-v="over">On top of content</button><button data-v="under">Behind content</button></div>
+          <p class="hint" id="layerHint"></p>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec" id="pagesSec">
+      <summary><span class="ico"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="3" width="12" height="16" rx="1.5"/><path d="M8 21h11a1 1 0 0 0 1-1V7"/></svg></span>Pages<svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="sec-body" id="pagesBody"></div>
+    </details>
+
+    <details class="sec" id="outSec">
+      <summary><span class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span>Output &amp; convert<svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary>
+      <div class="sec-body" id="outBody"></div>
+    </details>
+
+    <div class="set-foot">
+      <div>
+        <div class="lbl">My presets</div>
+        <div class="row"><input type="text" id="presetName" placeholder="Name this style…" maxlength="40"><button class="btn small" id="presetSave">Save</button></div>
+        <div class="presetlist" id="presetList"></div>
+      </div>
+      <button class="btn ghost block" id="resetBtn"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reset watermark to default</button>
+    </div>
+  </aside>
+</main>
+
+<!-- ================= BOTTOM BAR ================= -->
+<footer class="bottom">
+  <div class="summary" id="bottomSummary">No files yet.</div>
+  <button class="btn primary" id="exportBtn" disabled><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Export</button>
+</footer>
+
+<!-- ================= EXPORT DIALOG ================= -->
+<dialog id="exportDlg">
+  <div class="dlg">
+    <div class="dlg-h"><h3>Export</h3><button class="icon-btn" data-close aria-label="Close"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="dlg-b">
+      <label class="check" style="margin-bottom:6px"><input type="checkbox" id="xMerge"> Combine everything into one PDF</label>
+      <p class="hint" id="xMergeHint" style="margin:0 0 10px">Each file is turned into PDF pages, in the order shown in your file list.</p>
+      <div id="xList"></div>
+      <div id="xProgressWrap" hidden>
+        <div class="progress"><div id="xBar"></div></div>
+        <div class="plabel" id="xLabel"></div>
+      </div>
+      <div class="results" id="xResults"></div>
+    </div>
+    <div class="dlg-f">
+      <button class="btn ghost" data-close id="xClose">Close</button>
+      <button class="btn" id="xCancel" hidden>Stop</button>
+      <button class="btn" id="xZip" hidden><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Download all (.zip)</button>
+      <button class="btn primary" id="xStart">Start export</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ================= HELP DIALOG ================= -->
+<dialog id="helpDlg">
+  <div class="dlg">
+    <div class="dlg-h"><h3>Help &amp; shortcuts</h3><button class="icon-btn" data-close aria-label="Close"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="dlg-b">
+      <table class="help-table">
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">Z</span></td><td>Undo</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">Y</span> or <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">Z</span></td><td>Redo</td></tr>
+        <tr><td><span class="kbd">←</span> <span class="kbd">→</span></td><td>Previous / next page</td></tr>
+        <tr><td><span class="kbd">↑</span> <span class="kbd">↓</span></td><td>Previous / next file</td></tr>
+        <tr><td><span class="kbd">+</span> <span class="kbd">−</span> <span class="kbd">0</span></td><td>Zoom in / out / fit</td></tr>
+        <tr><td><span class="kbd">B</span></td><td>Show before / after</td></tr>
+        <tr><td><span class="kbd">W</span></td><td>Watermark on/off for the current page</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">O</span></td><td>Add files</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">E</span></td><td>Export</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">V</span></td><td>Paste an image from the clipboard as a new file</td></tr>
+        <tr><td><span class="kbd">?</span></td><td>Open this help</td></tr>
+      </table>
+      <div class="subhead">Good to know</div>
+      <p class="hint" style="font-size:13px">• Everything happens in your browser. Files are never uploaded.<br>
+      • <b>Best</b> results keep the original format (PDF stays PDF, Word stays Word, PowerPoint stays PowerPoint).<br>
+      • Converting Word or PowerPoint to PDF redraws the pages, so complex layouts may shift. For a perfect PDF, export from Word/PowerPoint first and then watermark the PDF here.<br>
+      • PDF → Word can either keep the look (pages become pictures) or keep editable text (layout is lost). No browser tool can do both perfectly.<br>
+      • Old .doc and .ppt files can't be read in a browser. Save them as .docx / .pptx first.<br>
+      • "Behind content" works on images, slides and PDFs without a solid white background. Many PDFs paint a white background, which hides anything behind it.</p>
+    </div>
+  </div>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="dropveil" id="dropVeil">Drop files to add them</div>
+<div class="render-host" id="renderHost" aria-hidden="true"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   0. UTILITIES
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clone = o => JSON.parse(JSON.stringify(o));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => r()));
+const yieldUI = () => new Promise(r => setTimeout(r, 0));
+class UserError extends Error {}
+
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(b < 10240 ? 1 : 0) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function baseName(n) { const i = n.lastIndexOf('.'); return i > 0 ? n.slice(0, i) : n; }
+function extOf(n) { const i = n.lastIndexOf('.'); return i >= 0 ? n.slice(i + 1).toLowerCase() : ''; }
+function pad(n, w) { return String(n).padStart(w, '0'); }
+
+function toast(msg, kind = 'info', ms = 4200) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + kind;
+  t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 320); }, ms);
+}
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+function makeCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w));
+  c.height = Math.max(1, Math.round(h));
+  return c;
+}
+function canvasToBlob(c, type = 'image/png', q) {
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new UserError('The page is too large to turn into an image. Try a lower resolution.')), type, q));
+}
+async function canvasToBytes(c, type, q) { return new Uint8Array(await (await canvasToBlob(c, type, q)).arrayBuffer()); }
+function loadImgEl(src) {
+  return new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = () => rej(new UserError("This image couldn't be opened. It may be damaged or in a format the browser can't read."));
+    i.src = src;
+  });
+}
+function friendlyError(e) {
+  if (e instanceof UserError) return e.message;
+  console.error(e);
+  const m = e && e.message ? e.message : String(e);
+  if (/password|encrypt/i.test(m)) return 'This file is password-protected. Please unlock it first, then add it again.';
+  if (/memory|allocation|too large/i.test(m)) return 'This file is too large for the browser to handle. Try splitting it into smaller files.';
+  return 'Something went wrong with this file (' + m + ').';
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('wmstudio.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('wmstudio.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+/* =====================================================================
+   1. LIBRARY LOADER (loaded on demand from cdnjs / jsdelivr)
+   ===================================================================== */
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const CDN = {
+  pdfjs:       ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', 'pdfjsLib', 'PDF reader'],
+  pdflib:      ['https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', 'PDFLib', 'PDF editor'],
+  jszip:       ['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', 'JSZip', 'ZIP tool'],
+  mammoth:     ['https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js', 'mammoth', 'Word reader'],
+  docx:        ['https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js', 'docx', 'Word writer'],
+  html2canvas: ['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas', 'page renderer'],
+};
+const libPromises = {};
+function loadLib(key) {
+  if (libPromises[key]) return libPromises[key];
+  const [url, glob, label] = CDN[key];
+  if (window[glob]) return (libPromises[key] = Promise.resolve(window[glob]));
+  libPromises[key] = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = url; s.async = true; s.crossOrigin = 'anonymous';
+    s.onload = () => window[glob] ? res(window[glob]) : rej(new UserError(`The ${label} didn't start correctly. Please reload the page.`));
+    s.onerror = () => {
+      delete libPromises[key];
+      s.remove();
+      const msg = `Couldn't download the ${label}. Check your internet connection and try again.`;
+      showLibBanner(msg);
+      rej(new UserError(msg));
+    };
+    document.head.appendChild(s);
+  });
+  return libPromises[key];
+}
+function showLibBanner(msg) { const b = $('#libBanner'); b.textContent = msg; b.classList.add('show'); }
+let pdfjsReady = null;
+function getPdfjs() {
+  if (!pdfjsReady) {
+    pdfjsReady = loadLib('pdfjs').then(lib => {
+      try {
+        // A tiny same-origin worker that imports the CDN worker (works even when the page is opened from disk)
+        const blob = new Blob([`importScripts(${JSON.stringify(PDFJS_WORKER)});`], { type: 'application/javascript' });
+        lib.GlobalWorkerOptions.workerPort = new Worker(URL.createObjectURL(blob));
+      } catch (e) {
+        lib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      }
+      return lib;
+    }).catch(e => { pdfjsReady = null; throw e; });
+  }
+  return pdfjsReady;
+}
+
+/* =====================================================================
+   2. STATE & CONSTANTS
+   ===================================================================== */
+const FONTS = [
+  { name: 'Montserrat', css: '"Montserrat", "Helvetica Neue", Arial, sans-serif' },
+  { name: 'Inter', css: '"Inter", Arial, sans-serif' },
+  { name: 'Oswald', css: '"Oswald", "Arial Narrow", Arial, sans-serif' },
+  { name: 'Playfair Display', css: '"Playfair Display", Georgia, serif' },
+  { name: 'Roboto Slab', css: '"Roboto Slab", Georgia, serif' },
+  { name: 'Dancing Script', css: '"Dancing Script", "Brush Script MT", cursive' },
+  { name: 'Arial', css: 'Arial, Helvetica, sans-serif' },
+  { name: 'Georgia', css: 'Georgia, "Times New Roman", serif' },
+  { name: 'Times New Roman', css: '"Times New Roman", Times, serif' },
+  { name: 'Courier New', css: '"Courier New", Courier, monospace' },
+];
+const DEFAULTS = {
+  type: 'text', text: 'CONFIDENTIAL', font: 'Montserrat', size: 64, bold: true, italic: false, outline: false,
+  color: '#d32f2f', opacity: 28,
+  logoId: null, logoSize: 30, logoOpacity: 35, grayscale: false,
+  rotation: 45, layout: 'single', position: 'mc', margin: 5, gapX: 90, gapY: 110, stagger: true,
+  offsetX: 0, offsetY: 0, layer: 'over'
+};
+const QUICK_PRESETS = [
+  { text: 'CONFIDENTIAL', color: '#d32f2f' },
+  { text: 'DRAFT', color: '#6b6b6b' },
+  { text: 'COPY', color: '#1565c0' },
+  { text: 'SAMPLE', color: '#e65100' },
+  { text: 'DO NOT DISTRIBUTE', color: '#b71c1c' },
+];
+const SWATCHES = ['#d32f2f', '#1c1b19', '#6b6b6b', '#1565c0', '#2e7d32', '#e65100', '#6a1b9a', '#ffffff'];
+const KIND_BY_EXT = { pdf: 'pdf', jpg: 'image', jpeg: 'image', png: 'image', webp: 'image', svg: 'svg', docx: 'docx', pptx: 'pptx', txt: 'txt', doc: 'legacy', ppt: 'legacy' };
+const KIND_LABEL = { pdf: 'PDF', image: 'Image', svg: 'SVG', docx: 'Word', pptx: 'PowerPoint', txt: 'Text', legacy: 'Old format' };
+
+const state = {
+  docs: [],
+  activeId: null,
+  page: 0,
+  zoom: 1,
+  before: false,
+  global: clone(DEFAULTS),
+  out: Object.assign({ suffix: '_watermarked', merge: false, pageSize: 'a4', orient: 'auto', margin: 0, dpi: 150, jpgQ: 90 }, store.get('out', {})),
+};
+state.out.merge = false;
+const logos = new Map();          // id -> { dataUrl, name, img, gray }
+let docSeq = 0, logoSeq = 0;
+
+const activeDoc = () => state.docs.find(d => d.id === state.activeId) || null;
+const settingsFor = doc => (doc && doc.override) || state.global;
+function editTarget() { const d = activeDoc(); return (d && d.override) || state.global; }
+
+/* =====================================================================
+   3. FILE LOADING
+   ===================================================================== */
+async function addFiles(fileList) {
+  const files = [...fileList];
+  if (!files.length) return;
+  const added = [];
+  for (const f of files) {
+    const ext = extOf(f.name);
+    let kind = KIND_BY_EXT[ext];
+    if (!kind && /^image\/(png|jpe?g|webp)$/.test(f.type)) kind = 'image';
+    if (!kind && f.type === 'image/svg+xml') kind = 'svg';
+    if (!kind) { toast(`"${f.name}" isn't a supported file type.`, 'bad'); continue; }
+    const doc = {
+      id: ++docSeq, file: f, name: f.name || ('pasted-image.' + (ext || 'png')), ext: ext || 'png', kind, size: f.size,
+      status: 'loading', error: null, pageCount: 0, pageSizes: [],
+      pageMode: 'all', range: '', manual: new Map(), override: null,
+      cache: new Map(), thumbs: new Map(), format: null,
+    };
+    state.docs.push(doc);
+    added.push(doc);
+    if (f.size > 50 * 1048576) toast(`"${doc.name}" is ${fmtSize(f.size)}. Large files can make the browser slow.`, 'warn', 6000);
+  }
+  if (!added.length) return;
+  if (!activeDoc()) { state.activeId = added[0].id; state.page = 0; }
+  setView('design');
+  renderAll();
+  for (const doc of added) {
+    await loadDoc(doc);
+    renderFileList();
+    if (doc.id === state.activeId) { renderDocPanels(); renderStrip(); schedulePreview(); }
+    updateBottom();
+    makeFileThumb(doc);
+  }
+}
+
+async function loadDoc(doc) {
+  try {
+    if (doc.kind === 'legacy') {
+      const what = doc.ext === 'doc' ? 'Word (.doc)' : 'PowerPoint (.ppt)';
+      const nw = doc.ext === 'doc' ? '.docx' : '.pptx';
+      throw new UserError(`Old ${what} files can't be read in a browser. Open it in ${doc.ext === 'doc' ? 'Word or Google Docs' : 'PowerPoint or Google Slides'} (or LibreOffice), save it as ${nw}, then add it again.`);
+    }
+    if (doc.kind === 'pdf') await loadPdf(doc);
+    else if (doc.kind === 'image') await loadImage(doc);
+    else if (doc.kind === 'svg') await loadSvg(doc);
+    else if (doc.kind === 'docx') await loadDocx(doc);
+    else if (doc.kind === 'pptx') await loadPptx(doc);
+    else if (doc.kind === 'txt') await loadTxt(doc);
+    doc.format = formatsFor(doc)[0].v;
+    doc.status = 'ready';
+  } catch (e) {
+    doc.status = 'error';
+    doc.error = friendlyError(e);
+  }
+}
+
+/* ---- PDF ---- */
+async function loadPdf(doc) {
+  const lib = await getPdfjs();
+  doc.bytes = new Uint8Array(await doc.file.arrayBuffer());
+  let pdf;
+  try {
+    pdf = await lib.getDocument({ data: doc.bytes.slice(), isEvalSupported: false }).promise;
+  } catch (e) {
+    if (e && e.name === 'PasswordException') throw new UserError('This PDF is password-protected. Please unlock it first, then add it again.');
+    throw new UserError("This PDF couldn't be read. It may be damaged or not a real PDF.");
+  }
+  doc.pdf = pdf;
+  doc.pageCount = pdf.numPages;
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const p = await pdf.getPage(i);
+    const vp = p.getViewport({ scale: 1 });
+    doc.pageSizes.push({ w: vp.width, h: vp.height });
+    if (i % 25 === 0) await yieldUI();
+  }
+  doc.renderBase = async (i, scale) => {
+    const p = await pdf.getPage(i + 1);
+    const vp = p.getViewport({ scale });
+    const c = makeCanvas(vp.width, vp.height);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    await p.render({ canvasContext: ctx, viewport: vp }).promise;
+    return c;
+  };
+}
+
+/* ---- Images ---- */
+async function loadImage(doc) {
+  doc.url = URL.createObjectURL(doc.file);
+  const img = await loadImgEl(doc.url);
+  doc.img = img;
+  doc.pageCount = 1;
+  doc.pageSizes = [{ w: img.naturalWidth, h: img.naturalHeight }];
+  doc.renderBase = async (i, scale) => {
+    const c = makeCanvas(img.naturalWidth * scale, img.naturalHeight * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  };
+}
+
+/* ---- SVG ---- */
+async function loadSvg(doc) {
+  let text = await doc.file.text();
+  const xml = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const svg = xml.documentElement;
+  if (!svg || svg.localName !== 'svg') throw new UserError("This SVG couldn't be read. It may be damaged.");
+  let w = parseFloat(svg.getAttribute('width')), h = parseFloat(svg.getAttribute('height'));
+  const vb = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+  if ((!w || !h || /%/.test(svg.getAttribute('width') || '')) && vb.length === 4 && vb[2] > 0) { w = vb[2]; h = vb[3]; }
+  if (!w || !h) { w = 800; h = 600; }
+  svg.setAttribute('width', w); svg.setAttribute('height', h);
+  if (!svg.getAttribute('xmlns')) svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  text = new XMLSerializer().serializeToString(svg);
+  doc.svgText = text;
+  doc.url = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' }));
+  doc.img = await loadImgEl(doc.url);
+  doc.pageCount = 1;
+  doc.pageSizes = [{ w, h }];
+  doc.renderBase = async (i, scale) => {
+    const c = makeCanvas(w * scale, h * scale);
+    c.getContext('2d').drawImage(doc.img, 0, 0, c.width, c.height);
+    return c;
+  };
+}
+
+/* ---- Plain text ---- */
+const TXT_PAGE = { w: 595.28, h: 841.89, m: 56, size: 11, lh: 15.5, font: '"Courier New", Courier, monospace' };
+async function loadTxt(doc) {
+  doc.text = (await doc.file.text()).replace(/\r\n?/g, '\n');
+  const ctx = makeCanvas(10, 10).getContext('2d');
+  ctx.font = `${TXT_PAGE.size}px ${TXT_PAGE.font}`;
+  const maxW = TXT_PAGE.w - TXT_PAGE.m * 2;
+  const lines = [];
+  for (const raw of doc.text.split('\n')) {
+    const para = raw.replace(/\t/g, '    ');
+    if (!para) { lines.push(''); continue; }
+    let line = '';
+    for (const word of para.split(/(\s+)/)) {
+      const test = line + word;
+      if (ctx.measureText(test).width > maxW && line) { lines.push(line.trimEnd()); line = word.trimStart(); }
+      else line = test;
+      while (ctx.measureText(line).width > maxW) {           // very long word: hard break
+        let k = line.length; while (k > 1 && ctx.measureText(line.slice(0, k)).width > maxW) k--;
+        lines.push(line.slice(0, k)); line = line.slice(k);
+      }
+    }
+    lines.push(line);
+  }
+  const perPage = Math.floor((TXT_PAGE.h - TXT_PAGE.m * 2) / TXT_PAGE.lh);
+  doc.txtPages = [];
+  for (let i = 0; i < lines.length; i += perPage) doc.txtPages.push(lines.slice(i, i + perPage));
+  if (!doc.txtPages.length) doc.txtPages.push(['']);
+  doc.txtLines = doc.text.split('\n');
+  doc.pageCount = doc.txtPages.length;
+  doc.pageSizes = doc.txtPages.map(() => ({ w: TXT_PAGE.w, h: TXT_PAGE.h }));
+  doc.renderBase = async (i, scale) => {
+    const c = makeCanvas(TXT_PAGE.w * scale, TXT_PAGE.h * scale);
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    g.scale(scale, scale);
+    g.fillStyle = '#111'; g.font = `${TXT_PAGE.size}px ${TXT_PAGE.font}`; g.textBaseline = 'top';
+    doc.txtPages[i].forEach((ln, k) => g.fillText(ln, TXT_PAGE.m, TXT_PAGE.m + k * TXT_PAGE.lh));
+    return c;
+  };
+}
+
+/* ---- Word (.docx) ---- */
+const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+const NS_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
+const NS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
+const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+const NS_P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
+const NS_WP = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
+const NS_PIC = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
+const REL_IMAGE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
+const REL_HEADER = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/header';
+const PT2PX = 96 / 72;
+
+function parseXml(str) {
+  const d = new DOMParser().parseFromString(str, 'application/xml');
+  if (d.getElementsByTagName('parsererror').length) throw new UserError('Part of this file is damaged and could not be read.');
+  return d;
+}
+function serializeXml(d) {
+  let s = new XMLSerializer().serializeToString(d);
+  if (!s.startsWith('<?xml')) s = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s;
+  return s;
+}
+const kids = (el, ns, name) => el ? [...el.children].filter(c => c.namespaceURI === ns && c.localName === name) : [];
+const kid = (el, ns, name) => kids(el, ns, name)[0] || null;
+const desc = (el, ns, name) => el ? (el.getElementsByTagNameNS(ns, name)[0] || null) : null;
+const wAttr = (el, name) => el ? (el.getAttributeNS(NS_W, name) || el.getAttribute('w:' + name)) : null;
+
+async function openZip(bytes, label) {
+  const JSZip = await loadLib('jszip');
+  try { return await JSZip.loadAsync(bytes); }
+  catch (e) { throw new UserError(`This ${label} file couldn't be opened. It may be password-protected or damaged.`); }
+}
+
+async function loadDocx(doc) {
+  const [, mammoth] = await Promise.all([loadLib('jszip'), loadLib('mammoth'), loadLib('html2canvas')]);
+  doc.bytes = new Uint8Array(await doc.file.arrayBuffer());
+  const zip = await openZip(doc.bytes, 'Word');
+  const f = zip.file('word/document.xml');
+  if (!f) throw new UserError("This doesn't look like a valid Word file.");
+  const xml = parseXml(await f.async('string'));
+  const sects = [...xml.getElementsByTagNameNS(NS_W, 'sectPr')];
+  const sect = sects[sects.length - 1];
+  const pgSz = desc(sect, NS_W, 'pgSz'), pgMar = desc(sect, NS_W, 'pgMar');
+  const tw = (v, d) => { const n = parseFloat(v); return isFinite(n) ? n / 20 : d; };
+  doc.page = {
+    w: tw(wAttr(pgSz, 'w'), 612), h: tw(wAttr(pgSz, 'h'), 792),
+    mt: Math.max(18, tw(wAttr(pgMar, 'top'), 72)), mb: Math.max(18, tw(wAttr(pgMar, 'bottom'), 72)),
+    ml: tw(wAttr(pgMar, 'left'), 72), mr: tw(wAttr(pgMar, 'right'), 72),
+  };
+  let html;
+  try { html = (await mammoth.convertToHtml({ arrayBuffer: doc.bytes.slice().buffer })).value; }
+  catch (e) { throw new UserError("This Word file couldn't be read. It may be damaged."); }
+  doc.html = html;
+  await paginateDocx(doc);
+  doc.pageCount = doc.docxPages.length;
+  doc.pageSizes = doc.docxPages.map(() => ({ w: doc.page.w, h: doc.page.h }));
+  doc.renderBase = (i, scale) => renderDocxPage(doc, i, scale);
+}
+function waitImages(root) {
+  return Promise.all([...root.querySelectorAll('img')].map(img => img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })));
+}
+function outerH(el) {
+  const cs = getComputedStyle(el);
+  return el.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+}
+async function paginateDocx(doc) {
+  const P = doc.page;
+  const contentW = (P.w - P.ml - P.mr) * PT2PX, contentH = (P.h - P.mt - P.mb) * PT2PX;
+  const box = document.createElement('div');
+  box.className = 'wm-doc';
+  box.style.width = contentW + 'px';
+  box.innerHTML = doc.html || '<p></p>';
+  $('#renderHost').appendChild(box);
+  await waitImages(box);
+  const blocks = [];
+  for (const el of [...box.children]) {
+    const h = outerH(el);
+    const tag = el.tagName;
+    if ((tag === 'UL' || tag === 'OL') && h > contentH * 0.3) {
+      let n = 1;
+      for (const li of [...el.children]) {
+        blocks.push({ html: `<${tag.toLowerCase()} start="${n}" style="margin:0">${li.outerHTML}</${tag.toLowerCase()}>`, h: outerH(li) });
+        n++;
+      }
+    } else if (tag === 'TABLE' && h > contentH) {
+      let chunk = [], acc = 0;
+      for (const row of [...el.rows]) {
+        const rh = row.offsetHeight;
+        if (acc + rh > contentH && chunk.length) { blocks.push({ html: `<table>${chunk.join('')}</table>`, h: acc }); chunk = []; acc = 0; }
+        chunk.push(row.outerHTML); acc += rh;
+      }
+      if (chunk.length) blocks.push({ html: `<table>${chunk.join('')}</table>`, h: acc + 10 });
+    } else {
+      blocks.push({ html: el.outerHTML, h });
+    }
+  }
+  box.remove();
+  const pages = [];
+  let cur = [], acc = 0;
+  for (const b of blocks) {
+    if (acc + b.h > contentH && cur.length) { pages.push(cur); cur = []; acc = 0; }
+    cur.push(b.html); acc += b.h;
+  }
+  if (cur.length) pages.push(cur);
+  doc.docxPages = pages.length ? pages : [[]];
+}
+async function renderDocxPage(doc, i, scale) {
+  const html2canvas = await loadLib('html2canvas');
+  const P = doc.page;
+  const W = P.w * PT2PX, H = P.h * PT2PX;
+  const page = document.createElement('div');
+  page.className = 'wm-doc';
+  Object.assign(page.style, { width: W + 'px', height: H + 'px', padding: `${P.mt * PT2PX}px ${P.mr * PT2PX}px ${P.mb * PT2PX}px ${P.ml * PT2PX}px` });
+  page.innerHTML = doc.docxPages[i].join('');
+  $('#renderHost').appendChild(page);
+  try {
+    await waitImages(page);
+    return await html2canvas(page, { scale: scale / PT2PX, backgroundColor: '#ffffff', logging: false, width: W, height: H, useCORS: true });
+  } finally { page.remove(); }
+}
+
+/* ---- PowerPoint (.pptx) ---- */
+async function loadPptx(doc) {
+  doc.bytes = new Uint8Array(await doc.file.arrayBuffer());
+  const zip = await openZip(doc.bytes, 'PowerPoint');
+  const presF = zip.file('ppt/presentation.xml');
+  if (!presF) throw new UserError("This doesn't look like a valid PowerPoint file.");
+  const pres = parseXml(await presF.async('string'));
+  const sz = desc(pres, NS_P, 'sldSz');
+  const W = (parseFloat(sz && sz.getAttribute('cx')) || 12192000) / 12700;
+  const H = (parseFloat(sz && sz.getAttribute('cy')) || 6858000) / 12700;
+  const rels = await readRels(zip, 'ppt/presentation.xml');
+  const slides = [];
+  for (const s of desc(pres, NS_P, 'sldIdLst') ? kids(desc(pres, NS_P, 'sldIdLst'), NS_P, 'sldId') : []) {
+    const rid = s.getAttributeNS(NS_R, 'id') || s.getAttribute('r:id');
+    if (rels[rid] && zip.file(rels[rid].target)) slides.push(rels[rid].target);
+  }
+  if (!slides.length) throw new UserError('This presentation has no slides.');
+  const P = doc.pptx = { zip, slides, W, H, xml: new Map(), rels: new Map(), imgs: new Map(), theme: {}, styles: null };
+  // theme colors
+  try {
+    const themePath = Object.keys(zip.files).find(p => /^ppt\/theme\/theme\d+\.xml$/.test(p));
+    if (themePath) {
+      const th = parseXml(await zip.file(themePath).async('string'));
+      const cs = desc(th, NS_A, 'clrScheme');
+      if (cs) for (const c of [...cs.children]) {
+        const v = c.firstElementChild;
+        if (!v) continue;
+        P.theme[c.localName] = '#' + (v.getAttribute('lastClr') || v.getAttribute('val') || '000000');
+      }
+    }
+  } catch (e) { /* theme is optional */ }
+  doc.pageCount = slides.length;
+  doc.pageSizes = slides.map(() => ({ w: W, h: H }));
+  doc.renderBase = (i, scale) => renderSlide(doc, i, scale);
+}
+function resolvePath(dir, target) {
+  if (target.startsWith('/')) return target.slice(1);
+  const parts = dir ? dir.split('/') : [];
+  for (const seg of target.split('/')) {
+    if (seg === '..') parts.pop();
+    else if (seg && seg !== '.') parts.push(seg);
+  }
+  return parts.join('/');
+}
+function relsPathFor(part) {
+  const i = part.lastIndexOf('/');
+  return `${part.slice(0, i)}/_rels/${part.slice(i + 1)}.rels`;
+}
+async function readRels(zip, part) {
+  const map = {};
+  const f = zip.file(relsPathFor(part));
+  if (!f) return map;
+  const x = parseXml(await f.async('string'));
+  const dir = part.slice(0, part.lastIndexOf('/'));
+  for (const r of [...x.getElementsByTagNameNS(NS_REL, 'Relationship')]) {
+    if (r.getAttribute('TargetMode') === 'External') continue;
+    map[r.getAttribute('Id')] = { type: r.getAttribute('Type') || '', target: resolvePath(dir, r.getAttribute('Target') || '') };
+  }
+  return map;
+}
+async function pptPart(P, path) {
+  if (!P.xml.has(path)) { const f = P.zip.file(path); P.xml.set(path, f ? parseXml(await f.async('string')) : null); }
+  if (!P.rels.has(path)) P.rels.set(path, await readRels(P.zip, path));
+  return { xml: P.xml.get(path), rels: P.rels.get(path), path };
+}
+async function pptImage(P, path) {
+  if (!P.imgs.has(path)) {
+    P.imgs.set(path, (async () => {
+      const f = P.zip.file(path);
+      if (!f) return null;
+      const ext = extOf(path);
+      const mime = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml', webp: 'image/webp', bmp: 'image/bmp' }[ext];
+      if (!mime) return null;  // EMF/WMF etc. can't be drawn by browsers
+      const blob = new Blob([await f.async('uint8array')], { type: mime });
+      try { return await loadImgEl(URL.createObjectURL(blob)); } catch (e) { return null; }
+    })());
+  }
+  return P.imgs.get(path);
+}
+// ---- colours ----
+function hexToRgb(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h.slice(0, 6), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function rgbToHsl(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2; if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; } return [h, s, l]; }
+function hslToRgb(h, s, l) { if (!s) return [l * 255, l * 255, l * 255]; const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q; const f = t => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; }; return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255]; }
+const PRST = { white: '#ffffff', black: '#000000', red: '#ff0000', blue: '#0000ff', green: '#008000', yellow: '#ffff00', gray: '#808080', grey: '#808080' };
+function colorFrom(el, theme) {
+  if (!el) return null;
+  for (const c of [...el.children]) {
+    let hex = null;
+    const v = c.getAttribute('val');
+    if (c.localName === 'srgbClr') hex = '#' + v;
+    else if (c.localName === 'schemeClr') {
+      const map = { tx1: 'dk1', tx2: 'dk2', bg1: 'lt1', bg2: 'lt2', phClr: 'accent1' };
+      hex = theme[map[v] || v] || (v === 'bg1' || v === 'lt1' ? '#ffffff' : '#000000');
+    } else if (c.localName === 'sysClr') hex = '#' + (c.getAttribute('lastClr') || (v === 'window' ? 'FFFFFF' : '000000'));
+    else if (c.localName === 'prstClr') hex = PRST[v] || '#000000';
+    else if (c.localName === 'scrgbClr') hex = '#' + ['r', 'g', 'b'].map(k => pad(Math.round(clamp(parseInt(c.getAttribute(k)) / 100000, 0, 1) * 255).toString(16), 2)).join('');
+    if (!hex) continue;
+    let [r, g, b] = hexToRgb(hex), a = 1;
+    let [hh, ss, ll] = rgbToHsl(r, g, b), changed = false;
+    for (const m of [...c.children]) {
+      const mv = parseInt(m.getAttribute('val')) / 100000;
+      if (m.localName === 'lumMod') { ll *= mv; changed = true; }
+      else if (m.localName === 'lumOff') { ll += mv; changed = true; }
+      else if (m.localName === 'tint') { ll = ll + (1 - ll) * (1 - mv); changed = true; }
+      else if (m.localName === 'shade') { ll *= mv; changed = true; }
+      else if (m.localName === 'alpha') a = mv;
+    }
+    if (changed) [r, g, b] = hslToRgb(hh, ss, clamp(ll, 0, 1));
+    return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a})`;
+  }
+  return null;
+}
+function readXfrm(x) {
+  if (!x) return null;
+  const off = kid(x, NS_A, 'off'), ext = kid(x, NS_A, 'ext');
+  if (!off || !ext) return null;
+  const e = (el, k) => (parseFloat(el.getAttribute(k)) || 0) / 12700;
+  const r = { x: e(off, 'x'), y: e(off, 'y'), w: e(ext, 'cx'), h: e(ext, 'cy'), rot: (parseFloat(x.getAttribute('rot')) || 0) / 60000, flipH: x.getAttribute('flipH') === '1', flipV: x.getAttribute('flipV') === '1' };
+  const co = kid(x, NS_A, 'chOff'), ce = kid(x, NS_A, 'chExt');
+  if (co && ce) { r.cx = e(co, 'x'); r.cy = e(co, 'y'); r.cw = e(ce, 'cx'); r.ch = e(ce, 'cy'); }
+  return r;
+}
+function phInfo(sp) {
+  const nv = sp.firstElementChild;
+  const nvPr = nv && kid(nv, NS_P, 'nvPr');
+  const ph = nvPr && kid(nvPr, NS_P, 'ph');
+  return ph ? { type: ph.getAttribute('type') || 'body', idx: ph.getAttribute('idx'), hasType: ph.hasAttribute('type') } : null;
+}
+function findPlaceholder(tree, ph, byTypeOnly) {
+  if (!tree) return null;
+  const sps = [...tree.getElementsByTagNameNS(NS_P, 'sp')];
+  const norm = t => ({ ctrTitle: 'title', subTitle: 'body', obj: 'body' }[t] || t);
+  if (!byTypeOnly && ph.idx != null) {
+    const m = sps.find(s => { const p = phInfo(s); return p && p.idx === ph.idx; });
+    if (m) return m;
+  }
+  return sps.find(s => { const p = phInfo(s); return p && (p.type === ph.type || norm(p.type) === norm(ph.type)); }) || null;
+}
+async function renderSlide(doc, i, scale) {
+  const P = doc.pptx;
+  const slide = await pptPart(P, P.slides[i]);
+  const layoutRel = Object.values(slide.rels).find(r => r.type.endsWith('/slideLayout'));
+  const layout = layoutRel ? await pptPart(P, layoutRel.target) : null;
+  const masterRel = layout && Object.values(layout.rels).find(r => r.type.endsWith('/slideMaster'));
+  const master = masterRel ? await pptPart(P, masterRel.target) : null;
+  const theme = P.theme;
+  const c = makeCanvas(P.W * scale, P.H * scale);
+  const ctx = c.getContext('2d');
+  ctx.scale(scale, scale);
+  // default text sizes from the master
+  const masterStyle = (name) => {
+    const st = master && master.xml && desc(master.xml, NS_P, name);
+    const d = st && desc(st, NS_A, 'defRPr');
+    return d && d.getAttribute('sz') ? parseInt(d.getAttribute('sz')) / 100 : null;
+  };
+  const sizes = { title: masterStyle('titleStyle') || 40, body: masterStyle('bodyStyle') || 20, other: masterStyle('otherStyle') || 18 };
+  const masterAlign = (name) => {
+    const st = master && master.xml && desc(master.xml, NS_P, name);
+    const l = st && desc(st, NS_A, 'lvl1pPr');
+    return (l && l.getAttribute('algn')) || null;
+  };
+  sizes.titleAlign = masterAlign('titleStyle');
+  sizes.bodyAlign = masterAlign('bodyStyle');
+  // background
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, P.W, P.H);
+  for (const part of [slide, layout, master]) {
+    if (!part || !part.xml) continue;
+    const bg = desc(part.xml, NS_P, 'bg');
+    if (!bg) continue;
+    const bgPr = kid(bg, NS_P, 'bgPr'), bgRef = kid(bg, NS_P, 'bgRef');
+    if (bgPr) {
+      const blip = desc(bgPr, NS_A, 'blip');
+      const fill = kid(bgPr, NS_A, 'solidFill') || kid(bgPr, NS_A, 'gradFill');
+      if (blip) {
+        const rid = blip.getAttributeNS(NS_R, 'embed');
+        const img = part.rels[rid] && await pptImage(P, part.rels[rid].target);
+        if (img) ctx.drawImage(img, 0, 0, P.W, P.H);
+      } else if (fill) {
+        const col = fill.localName === 'gradFill' ? colorFrom(desc(fill, NS_A, 'gs'), theme) : colorFrom(fill, theme);
+        if (col) { ctx.fillStyle = col; ctx.fillRect(0, 0, P.W, P.H); }
+      }
+    } else if (bgRef) {
+      const col = colorFrom(bgRef, theme);
+      if (col) { ctx.fillStyle = col; ctx.fillRect(0, 0, P.W, P.H); }
+    }
+    break;
+  }
+  const root = el => el && el.xml && el.xml.documentElement;
+  const tree = el => el && el.xml && desc(el.xml, NS_P, 'spTree');
+  const showMasterOnSlide = !root(slide) || root(slide).getAttribute('showMasterSp') !== '0';
+  const showMasterOnLayout = !root(layout) || root(layout).getAttribute('showMasterSp') !== '0';
+  const base = { P, theme, sizes };
+  if (master && showMasterOnSlide && showMasterOnLayout) await drawTree(ctx, tree(master), { ...base, part: master, template: true });
+  if (layout && showMasterOnSlide) await drawTree(ctx, tree(layout), { ...base, part: layout, template: true });
+  await drawTree(ctx, tree(slide), {
+    ...base, part: slide, template: false,
+    // returns the layout/master shape that holds the position (xf) and the closest one for text styles
+    findPh: ph => {
+      const cands = [findPlaceholder(tree(layout), ph), findPlaceholder(tree(master), ph, true)].filter(Boolean);
+      const xfSp = cands.find(c => readXfrm(desc(kid(c, NS_P, 'spPr'), NS_A, 'xfrm'))) || null;
+      return { xfSp, styleSp: cands[0] || null, all: cands };
+    },
+  });
+  return c;
+}
+async function drawTree(ctx, treeEl, cx) {
+  if (!treeEl) return;
+  for (const el of [...treeEl.children]) {
+    try {
+      if (el.namespaceURI !== NS_P) continue;
+      if (el.localName === 'sp') await drawSp(ctx, el, cx);
+      else if (el.localName === 'pic') await drawPic(ctx, el, cx);
+      else if (el.localName === 'grpSp') await drawGrp(ctx, el, cx);
+      else if (el.localName === 'graphicFrame') drawFrame(ctx, el, cx);
+      else if (el.localName === 'cxnSp') drawCxn(ctx, el, cx);
+    } catch (e) { console.warn('Skipped a slide element', e); }
+  }
+}
+function withXf(ctx, xf, fn, applyFlip = true) {
+  ctx.save();
+  ctx.translate(xf.x + xf.w / 2, xf.y + xf.h / 2);
+  if (xf.rot) ctx.rotate(xf.rot * Math.PI / 180);
+  if (applyFlip) ctx.scale(xf.flipH ? -1 : 1, xf.flipV ? -1 : 1);
+  ctx.translate(-xf.w / 2, -xf.h / 2);
+  fn();
+  ctx.restore();
+}
+async function drawGrp(ctx, el, cx) {
+  const xf = readXfrm(desc(kid(el, NS_P, 'grpSpPr'), NS_A, 'xfrm'));
+  ctx.save();
+  if (xf && xf.cw && xf.ch) {
+    ctx.translate(xf.x, xf.y);
+    ctx.scale(xf.w / xf.cw || 1, xf.h / xf.ch || 1);
+    ctx.translate(-xf.cx, -xf.cy);
+  }
+  await drawTree(ctx, el, cx);
+  ctx.restore();
+}
+function shapePath(ctx, prst, w, h) {
+  ctx.beginPath();
+  if (prst === 'ellipse') ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+  else if (prst === 'roundRect' && ctx.roundRect) ctx.roundRect(0, 0, w, h, Math.min(w, h) * 0.1667);
+  else ctx.rect(0, 0, w, h);
+}
+async function drawSp(ctx, el, cx) {
+  const ph = phInfo(el);
+  if (cx.template && ph) return;               // placeholders on layouts/masters are only "slots"
+  const spPr = kid(el, NS_P, 'spPr');
+  let xf = readXfrm(spPr && kid(spPr, NS_A, 'xfrm'));
+  let phSp = null, phAll = [];
+  if (ph && cx.findPh) {
+    const found = cx.findPh(ph);
+    phSp = found.styleSp; phAll = found.all;
+    if (!xf && found.xfSp) xf = readXfrm(desc(kid(found.xfSp, NS_P, 'spPr'), NS_A, 'xfrm'));
+  }
+  if (!xf) return;
+  const style = kid(el, NS_P, 'style');
+  const geom = spPr && kid(spPr, NS_A, 'prstGeom');
+  const prst = geom ? geom.getAttribute('prst') : (spPr && kid(spPr, NS_A, 'custGeom') ? 'cust' : 'rect');
+  // fill
+  let fill = null;
+  if (spPr) {
+    const sf = kid(spPr, NS_A, 'solidFill'), gf = kid(spPr, NS_A, 'gradFill'), nf = kid(spPr, NS_A, 'noFill');
+    if (sf) fill = colorFrom(sf, cx.theme);
+    else if (gf) fill = colorFrom(desc(gf, NS_A, 'gs'), cx.theme);
+    else if (!nf && style) { const fr = kid(style, NS_A, 'fillRef'); if (fr && fr.getAttribute('idx') !== '0') fill = colorFrom(fr, cx.theme); }
+  }
+  // line
+  let line = null, lw = 0.75;
+  const ln = spPr && kid(spPr, NS_A, 'ln');
+  if (ln) {
+    if (ln.getAttribute('w')) lw = parseInt(ln.getAttribute('w')) / 12700;
+    if (kid(ln, NS_A, 'solidFill')) line = colorFrom(kid(ln, NS_A, 'solidFill'), cx.theme);
+    else if (!kid(ln, NS_A, 'noFill') && style) { const lr = kid(style, NS_A, 'lnRef'); if (lr && lr.getAttribute('idx') !== '0') line = colorFrom(lr, cx.theme); }
+  } else if (style) { const lr = kid(style, NS_A, 'lnRef'); if (lr && lr.getAttribute('idx') !== '0') line = colorFrom(lr, cx.theme); }
+  if (prst !== 'cust') {
+    withXf(ctx, xf, () => {
+      if (prst === 'line') {
+        if (line) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(xf.w, xf.h); ctx.strokeStyle = line; ctx.lineWidth = lw; ctx.stroke(); }
+        return;
+      }
+      shapePath(ctx, prst, xf.w, xf.h);
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (line) { ctx.strokeStyle = line; ctx.lineWidth = lw; ctx.stroke(); }
+    });
+  }
+  // text
+  const tx = kid(el, NS_P, 'txBody');
+  if (tx) {
+    let defSize = cx.sizes.other, bullets = false, defAlgn = null;
+    const isTitle = ph && (ph.type === 'title' || ph.type === 'ctrTitle');
+    if (ph) {
+      if (isTitle) { defSize = cx.sizes.title; defAlgn = cx.sizes.titleAlign; }
+      else if (ph.type === 'body' || ph.type === 'obj' || ph.type === 'subTitle') {
+        defSize = cx.sizes.body; defAlgn = cx.sizes.bodyAlign;
+        bullets = ph.type === 'obj' || (ph.type === 'body' && !ph.hasType);
+      }
+      // the nearest layout/master shape that sets a size or alignment wins
+      for (const c of phAll) {
+        const lvl1 = desc(desc(kid(c, NS_P, 'txBody'), NS_A, 'lstStyle'), NS_A, 'lvl1pPr');
+        const d = lvl1 && desc(lvl1, NS_A, 'defRPr');
+        if (d && d.getAttribute('sz')) { defSize = parseInt(d.getAttribute('sz')) / 100; break; }
+      }
+      for (const c of phAll) {
+        const lvl1 = desc(desc(kid(c, NS_P, 'txBody'), NS_A, 'lstStyle'), NS_A, 'lvl1pPr');
+        if (lvl1 && lvl1.getAttribute('algn')) { defAlgn = lvl1.getAttribute('algn'); break; }
+        if (lvl1 && kid(lvl1, NS_A, 'buNone') && ph.type !== 'obj') bullets = false;
+      }
+      if (ph.type === 'subTitle') bullets = false;
+    }
+    const fr = style && kid(style, NS_A, 'fontRef');
+    const defColor = (fr && colorFrom(fr, cx.theme)) || cx.theme.dk1 || '#000000';
+    let bodyPr = kid(tx, NS_A, 'bodyPr');
+    let anchor = bodyPr && bodyPr.getAttribute('anchor');
+    for (const c of phAll) { if (anchor) break; const b = desc(kid(c, NS_P, 'txBody'), NS_A, 'bodyPr'); anchor = b && b.getAttribute('anchor'); }
+    if (!anchor) anchor = isTitle ? 'ctr' : 't';
+    withXf(ctx, xf, () => drawTextBody(ctx, tx, { x: 0, y: 0, w: xf.w, h: xf.h }, { defSize, defColor, bullets, anchor, defAlgn, theme: cx.theme }), false);
+  }
+}
+function drawTextBody(ctx, tx, box, o) {
+  const bodyPr = kid(tx, NS_A, 'bodyPr');
+  const ins = (k, d) => bodyPr && bodyPr.getAttribute(k) != null ? parseInt(bodyPr.getAttribute(k)) / 12700 : d;
+  const L = ins('lIns', 7.2), R = ins('rIns', 7.2), T = ins('tIns', 3.6), B = ins('bIns', 3.6);
+  const auto = bodyPr && kid(bodyPr, NS_A, 'normAutofit');
+  const fscale = auto && auto.getAttribute('fontScale') ? parseInt(auto.getAttribute('fontScale')) / 100000 : 1;
+  const wrap = !bodyPr || bodyPr.getAttribute('wrap') !== 'none';
+  const maxW = Math.max(4, box.w - L - R);
+  const lines = [];
+  for (const p of kids(tx, NS_A, 'p')) {
+    const pPr = kid(p, NS_A, 'pPr');
+    const algn = (pPr && pPr.getAttribute('algn')) || o.defAlgn || 'l';
+    const lvl = pPr && pPr.getAttribute('lvl') ? parseInt(pPr.getAttribute('lvl')) : 0;
+    const tokens = [];
+    let endSize = o.defSize;
+    const endPr = kid(p, NS_A, 'endParaRPr');
+    if (endPr && endPr.getAttribute('sz')) endSize = parseInt(endPr.getAttribute('sz')) / 100;
+    const styleOf = rPr => {
+      const sz = (rPr && rPr.getAttribute('sz') ? parseInt(rPr.getAttribute('sz')) / 100 : o.defSize) * fscale;
+      const latin = rPr && kid(rPr, NS_A, 'latin');
+      let face = latin && latin.getAttribute('typeface');
+      if (!face || face.startsWith('+')) face = null;
+      return {
+        size: sz, bold: rPr && rPr.getAttribute('b') === '1', italic: rPr && rPr.getAttribute('i') === '1',
+        color: (rPr && colorFrom(kid(rPr, NS_A, 'solidFill'), o.theme)) || o.defColor,
+        font: (face ? `"${face}", ` : '') + 'Calibri, Carlito, "Segoe UI", Arial, sans-serif'
+      };
+    };
+    let hasText = false;
+    for (const ch of [...p.children]) {
+      if (ch.localName === 'r' || ch.localName === 'fld') {
+        const t = kid(ch, NS_A, 't');
+        const text = t ? t.textContent : '';
+        if (text) hasText = true;
+        const st = styleOf(kid(ch, NS_A, 'rPr'));
+        for (const piece of text.split(/(\s+)/)) if (piece) tokens.push({ text: piece, st });
+      } else if (ch.localName === 'br') tokens.push({ br: true, st: styleOf(kid(ch, NS_A, 'rPr')) });
+    }
+    const noBullet = pPr && kid(pPr, NS_A, 'buNone');
+    const buChar = pPr && kid(pPr, NS_A, 'buChar');
+    if (hasText && !noBullet && (buChar || o.bullets)) {
+      const st = tokens.find(t => t.st) ? tokens.find(t => t.st).st : styleOf(null);
+      tokens.unshift({ text: (buChar ? buChar.getAttribute('char') : '•') + '  ', st });
+    }
+    const indent = lvl * 24;
+    // wrap tokens into lines
+    let cur = { tokens: [], w: 0, size: endSize * fscale, algn, indent };
+    const flush = () => { lines.push(cur); cur = { tokens: [], w: 0, size: endSize * fscale, algn, indent }; };
+    for (const tk of tokens) {
+      if (tk.br) { cur.size = Math.max(cur.size, tk.st.size); flush(); continue; }
+      ctx.font = `${tk.st.italic ? 'italic ' : ''}${tk.st.bold ? '700' : '400'} ${tk.st.size}px ${tk.st.font}`;
+      const w = ctx.measureText(tk.text).width;
+      if (wrap && cur.tokens.length && cur.w + w > maxW - indent && tk.text.trim()) flush();
+      if (!cur.tokens.length && !tk.text.trim()) continue;
+      cur.tokens.push({ ...tk, w });
+      cur.w += w;
+      if (!cur.tokens.slice(0, -1).length) cur.size = tk.st.size; else cur.size = Math.max(cur.size, tk.st.size);
+    }
+    flush();
+    if (lines.length) lines[lines.length - 1].paraEnd = true;
+  }
+  const totalH = lines.reduce((a, l) => a + l.size * 1.2 + (l.paraEnd ? l.size * 0.2 : 0), 0);
+  let y = box.y + T;
+  if (o.anchor === 'ctr') y = box.y + (box.h - totalH) / 2;
+  else if (o.anchor === 'b') y = box.y + box.h - B - totalH;
+  ctx.textBaseline = 'alphabetic';
+  for (const l of lines) {
+    const lh = l.size * 1.2;
+    const w = l.tokens.reduce((a, t) => a + t.w, 0);
+    let x = box.x + L + l.indent;
+    if (l.algn === 'ctr') x = box.x + L + (maxW - w) / 2;
+    else if (l.algn === 'r') x = box.x + box.w - R - w;
+    for (const t of l.tokens) {
+      ctx.font = `${t.st.italic ? 'italic ' : ''}${t.st.bold ? '700' : '400'} ${t.st.size}px ${t.st.font}`;
+      ctx.fillStyle = t.st.color;
+      ctx.fillText(t.text, x, y + l.size * 0.95);
+      x += t.w;
+    }
+    y += lh + (l.paraEnd ? l.size * 0.2 : 0);
+  }
+}
+async function drawPic(ctx, el, cx) {
+  const spPr = kid(el, NS_P, 'spPr');
+  let xf = readXfrm(spPr && kid(spPr, NS_A, 'xfrm'));
+  const ph = phInfo(el);
+  if (!xf && ph && cx.findPh) { const s = cx.findPh(ph).xfSp; xf = s && readXfrm(desc(kid(s, NS_P, 'spPr'), NS_A, 'xfrm')); }
+  if (!xf) return;
+  const bf = kid(el, NS_P, 'blipFill');
+  const blip = bf && kid(bf, NS_A, 'blip');
+  if (!blip) return;
+  const rid = blip.getAttributeNS(NS_R, 'embed') || blip.getAttribute('r:embed');
+  const rel = cx.part.rels[rid];
+  if (!rel) return;
+  const img = await pptImage(cx.P, rel.target);
+  if (!img) return;
+  const src = kid(bf, NS_A, 'srcRect');
+  const g = k => src && src.getAttribute(k) ? parseInt(src.getAttribute(k)) / 100000 : 0;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const sx = g('l') * iw, sy = g('t') * ih, sw = iw * (1 - g('l') - g('r')), sh = ih * (1 - g('t') - g('b'));
+  withXf(ctx, xf, () => ctx.drawImage(img, sx, sy, Math.max(1, sw), Math.max(1, sh), 0, 0, xf.w, xf.h));
+}
+function drawFrame(ctx, el, cx) {
+  const xf = readXfrm(kid(el, NS_P, 'xfrm'));
+  const tbl = desc(el, NS_A, 'tbl');
+  if (!xf || !tbl) return;
+  const cols = kids(kid(tbl, NS_A, 'tblGrid'), NS_A, 'gridCol').map(c => parseInt(c.getAttribute('w')) / 12700);
+  let y = xf.y;
+  for (const tr of kids(tbl, NS_A, 'tr')) {
+    const h = Math.max(parseInt(tr.getAttribute('h')) / 12700 || 20, 14);
+    let x = xf.x;
+    kids(tr, NS_A, 'tc').forEach((tc, ci) => {
+      const w = cols[ci] || 60;
+      const tcPr = kid(tc, NS_A, 'tcPr');
+      const fill = tcPr && colorFrom(kid(tcPr, NS_A, 'solidFill'), cx.theme);
+      if (fill) { ctx.fillStyle = fill; ctx.fillRect(x, y, w, h); }
+      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 0.75; ctx.strokeRect(x, y, w, h);
+      const tb = kid(tc, NS_A, 'txBody');
+      if (tb) drawTextBody(ctx, tb, { x, y, w, h }, { defSize: 14, defColor: cx.theme.dk1 || '#000', bullets: false, anchor: 't', theme: cx.theme });
+      x += w;
+    });
+    y += h;
+  }
+}
+function drawCxn(ctx, el, cx) {
+  const spPr = kid(el, NS_P, 'spPr');
+  const xf = readXfrm(spPr && kid(spPr, NS_A, 'xfrm'));
+  if (!xf) return;
+  const ln = spPr && kid(spPr, NS_A, 'ln');
+  let col = ln && colorFrom(kid(ln, NS_A, 'solidFill'), cx.theme);
+  const style = kid(el, NS_P, 'style');
+  if (!col && style) col = colorFrom(kid(style, NS_A, 'lnRef'), cx.theme);
+  if (!col) return;
+  withXf(ctx, xf, () => {
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(xf.w, xf.h);
+    ctx.strokeStyle = col; ctx.lineWidth = ln && ln.getAttribute('w') ? parseInt(ln.getAttribute('w')) / 12700 : 1; ctx.stroke();
+  });
+}
+
+/* ---- Page render cache ---- */
+function getBase(doc, i, scale) {
+  const key = i + '|' + scale.toFixed(4);
+  if (doc.cache.has(key)) { const v = doc.cache.get(key); doc.cache.delete(key); doc.cache.set(key, v); return v; }
+  const p = doc.renderBase(i, scale).catch(e => { doc.cache.delete(key); throw e; });
+  doc.cache.set(key, p);
+  while (doc.cache.size > 6) doc.cache.delete(doc.cache.keys().next().value);
+  return p;
+}
+
+/* =====================================================================
+   4. WATERMARK ENGINE
+   ===================================================================== */
+function fontCss(name) { return (FONTS.find(f => f.name === name) || FONTS[0]).css; }
+function fontString(s, px) { return `${s.italic ? 'italic ' : ''}${s.bold ? '700' : '400'} ${px}px ${fontCss(s.font)}`; }
+async function ensureFont(s) {
+  if (!document.fonts || s.type === 'logo') return;
+  try { await Promise.race([document.fonts.load(fontString(s, 40), 'Aa'), new Promise(r => setTimeout(r, 2500))]); } catch (e) { }
+}
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1, 2)}-${pad(d.getDate(), 2)}`; }
+function timeStr() { const d = new Date(); return `${pad(d.getHours(), 2)}:${pad(d.getMinutes(), 2)}`; }
+function infoFor(doc, i, opts = {}) {
+  return { filename: baseName(doc.name), date: todayStr(), time: timeStr(), page: i + 1, total: doc.pageCount || 1, noPages: !!opts.noPages };
+}
+function resolveText(text, info) {
+  let t = text || '';
+  if (info.noPages) {
+    // Word decides page breaks itself, so page numbers can't be baked in: remove them neatly
+    t = t.replace(/\s*[-–—|·:,]?\s*(page\s*)?\{page\}(\s*(\/|of)\s*\{totalPages\})?/gi, '').replace(/\s*[-–—|·:,]?\s*\{totalPages\}\s*(pages?)?/gi, '');
+  }
+  return t.replace(/\{filename\}/gi, info.filename).replace(/\{date\}/gi, info.date).replace(/\{time\}/gi, info.time)
+    .replace(/\{page\}/gi, info.page).replace(/\{totalPages\}/gi, info.total).replace(/[ \t]+$/gm, '');
+}
+const usesPageVars = s => s.type !== 'logo' && /\{(page|totalPages)\}/i.test(s.text || '');
+function logoSource(s) {
+  const L = s.logoId && logos.get(s.logoId);
+  if (!L || !L.img) return null;
+  if (!s.grayscale) return L.img;
+  if (!L.gray) {
+    const c = makeCanvas(L.img.naturalWidth || 400, L.img.naturalHeight || 400);
+    const g = c.getContext('2d');
+    g.drawImage(L.img, 0, 0, c.width, c.height);
+    const d = g.getImageData(0, 0, c.width, c.height);
+    for (let k = 0; k < d.data.length; k += 4) { const y = d.data[k] * .299 + d.data[k + 1] * .587 + d.data[k + 2] * .114; d.data[k] = d.data[k + 1] = d.data[k + 2] = y; }
+    g.putImageData(d, 0, 0);
+    L.gray = c;
+  }
+  return L.gray;
+}
+function hasWatermark(s) {
+  const t = s.type !== 'logo' && (s.text || '').trim();
+  const l = s.type !== 'text' && logoSource(s);
+  return !!(t || l);
+}
+/** Measure the watermark "stamp" (logo above text) in page units. */
+function buildUnit(ctx, s, W, H, info) {
+  const k = Math.sqrt((W * H) / (595.28 * 841.89));     // keeps sizes consistent across page sizes
+  const u = { k, lines: [], fontPx: s.size * k, textW: 0, textH: 0, lw: 0, lh: 0, gap: 0 };
+  if (s.type !== 'logo') {
+    const t = resolveText(s.text, info);
+    u.lines = t.split('\n').filter((l, i, a) => l.trim() || a.length === 1);
+    if (!t.trim()) u.lines = [];
+    ctx.font = fontString(s, u.fontPx);
+    u.textW = Math.max(0, ...u.lines.map(l => ctx.measureText(l).width));
+    u.lineH = u.fontPx * 1.18;
+    u.textH = u.lines.length * u.lineH;
+  }
+  const logo = s.type !== 'text' && logoSource(s);
+  if (logo) {
+    const iw = logo.naturalWidth || logo.width, ih = logo.naturalHeight || logo.height;
+    u.lw = Math.min(W, H) * s.logoSize / 100 * (iw >= ih ? 1 : iw / ih);
+    u.lh = u.lw * ih / iw;
+    u.logo = logo;
+  }
+  if (u.logo && u.lines.length) u.gap = u.fontPx * 0.35;
+  u.w = Math.max(u.textW, u.lw);
+  u.h = u.lh + u.gap + u.textH;
+  return u;
+}
+function drawUnit(ctx, u, s) {
+  let y = -u.h / 2;
+  if (u.logo) {
+    ctx.globalAlpha = s.logoOpacity / 100;
+    ctx.drawImage(u.logo, -u.lw / 2, y, u.lw, u.lh);
+    y += u.lh + u.gap;
+  }
+  if (u.lines.length) {
+    ctx.globalAlpha = s.opacity / 100;
+    ctx.font = fontString(s, u.fontPx);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    u.lines.forEach((ln, i) => {
+      const ly = y + u.lineH * (i + 0.5);
+      if (s.outline) { ctx.strokeStyle = s.color; ctx.lineWidth = Math.max(0.6, u.fontPx / 28); ctx.lineJoin = 'round'; ctx.strokeText(ln, 0, ly); }
+      else { ctx.fillStyle = s.color; ctx.fillText(ln, 0, ly); }
+    });
+  }
+  ctx.globalAlpha = 1;
+}
+/** Draw the watermark onto ctx, where 1 unit = 1 page unit (pt for documents, px for images). */
+function drawWatermark(ctx, W, H, s, info) {
+  if (!hasWatermark(s)) return;
+  ctx.save();
+  const u = buildUnit(ctx, s, W, H, info);
+  if (!u.w || !u.h) { ctx.restore(); return; }
+  const rad = -s.rotation * Math.PI / 180;      // positive angle = text rises to the right (↗)
+  const offX = s.offsetX / 100 * W, offY = -s.offsetY / 100 * H;
+  if (s.layout === 'tile') {
+    const stepX = Math.max(u.w + s.gapX * u.k, 8 * u.k), stepY = Math.max(u.h + s.gapY * u.k, 8 * u.k);
+    const R = Math.hypot(W, H) / 2 + Math.max(stepX, stepY);
+    const nx = Math.ceil(R / stepX) + 1, ny = Math.ceil(R / stepY) + 1;
+    if ((2 * nx + 1) * (2 * ny + 1) > 6000) { ctx.restore(); return; }
+    ctx.translate(W / 2 + offX, H / 2 + offY);
+    ctx.rotate(rad);
+    for (let r = -ny; r <= ny; r++) {
+      const shift = s.stagger && (r & 1) ? stepX / 2 : 0;
+      for (let c = -nx; c <= nx; c++) {
+        ctx.save(); ctx.translate(c * stepX + shift, r * stepY); drawUnit(ctx, u, s); ctx.restore();
+      }
+    }
+  } else {
+    const cs = Math.abs(Math.cos(rad)), sn = Math.abs(Math.sin(rad));
+    const bw = u.w * cs + u.h * sn, bh = u.w * sn + u.h * cs;
+    const m = s.margin / 100 * Math.min(W, H);
+    const row = s.position[0], col = s.position[1];
+    let x = col === 'l' ? m + bw / 2 : col === 'r' ? W - m - bw / 2 : W / 2;
+    let y = row === 't' ? m + bh / 2 : row === 'b' ? H - m - bh / 2 : H / 2;
+    ctx.translate(x + offX, y + offY);
+    ctx.rotate(rad);
+    drawUnit(ctx, u, s);
+  }
+  ctx.restore();
+}
+/** Transparent canvas the size of the page containing just the watermark. */
+function renderLayer(W, H, s, info, maxPx = 2600) {
+  const sc = Math.min(maxPx / Math.max(W, H), 6);
+  const c = makeCanvas(W * sc, H * sc);
+  const g = c.getContext('2d');
+  g.scale(c.width / W, c.height / H);
+  drawWatermark(g, W, H, s, info);
+  return c;
+}
+function parseRange(str, n) {
+  const set = new Set(), bad = [];
+  const norm = (str || '').replace(/\s*-\s*/g, '-');
+  for (const part of norm.split(/[,;\s]+/).filter(Boolean)) {
+    const m = part.match(/^(\d+)(?:-(\d*))?$/);
+    if (!m) { bad.push(part); continue; }
+    let a = +m[1], b = m[2] === undefined ? a : (m[2] === '' ? n : +m[2]);
+    if (a > b) [a, b] = [b, a];
+    if (a > n) { bad.push(part); continue; }
+    for (let k = Math.max(1, a); k <= Math.min(n, b); k++) set.add(k - 1);
+  }
+  return { set, bad };
+}
+function pageModeOn(doc, i) {
+  const n = doc.pageCount;
+  switch (doc.pageMode) {
+    case 'odd': return i % 2 === 0;
+    case 'even': return i % 2 === 1;
+    case 'first': return i === 0;
+    case 'last': return i === n - 1;
+    case 'custom': return parseRange(doc.range, n).set.has(i);
+    default: return true;
+  }
+}
+function wordKeep(doc) { return doc.kind === 'docx' && doc.format === 'keep'; }
+function pageIsMarked(doc, i) {
+  if (wordKeep(doc)) return true;
+  if (doc.manual.has(i)) return doc.manual.get(i);
+  return pageModeOn(doc, i);
+}
+function markedCount(doc) { let n = 0; for (let i = 0; i < doc.pageCount; i++) if (pageIsMarked(doc, i)) n++; return n; }
+function previewInfo(doc, i) { return infoFor(doc, i, { noPages: wordKeep(doc) }); }
+
+/* =====================================================================
+   5. PREVIEW, THUMBNAILS, FILE LIST
+   ===================================================================== */
+const pv = $('#pv'), pvCtx = pv.getContext('2d');
+let pvToken = 0, pvQueued = false;
+function schedulePreview() {
+  if (pvQueued) return;
+  pvQueued = true;
+  requestAnimationFrame(() => { pvQueued = false; drawPreview(); });
+}
+function setStageMessage(html) {
+  const m = $('#stageMsg');
+  if (html == null) { m.hidden = true; $('#stageInner').hidden = false; return; }
+  m.innerHTML = html; m.hidden = false; $('#stageInner').hidden = true;
+}
+const EMPTY_STAGE = $('#stageMsg').innerHTML;
+async function drawPreview() {
+  const doc = activeDoc();
+  updatePreviewBar();
+  if (!doc) { setStageMessage(EMPTY_STAGE); $('#emptyAdd').onclick = () => $('#fileInput').click(); return; }
+  if (doc.status === 'loading') { setStageMessage(`<div class="big"><span class="spin" style="width:28px;height:28px;border-width:3px"></span></div><h3>Opening “${escapeHtml(doc.name)}”…</h3><div>Big files can take a moment.</div>`); return; }
+  if (doc.status === 'error') {
+    const canRetry = doc.kind !== 'legacy';
+    setStageMessage(`<div class="big" style="color:var(--bad)"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v6M12 16.5h.01"/></svg></div><h3>This file can't be used</h3><div>${escapeHtml(doc.error)}</div>${canRetry ? '<div style="margin-top:16px"><button class="btn" id="retryDoc">Try again</button></div>' : ''}`);
+    if (canRetry) $('#retryDoc').onclick = async () => {
+      $('#libBanner').classList.remove('show');
+      doc.status = 'loading'; doc.error = null; doc.pageSizes = []; doc.cache.clear(); doc.thumbs.clear();
+      renderFileList(); schedulePreview();
+      await loadDoc(doc);
+      renderAll(); makeFileThumb(doc);
+    };
+    return;
+  }
+  const i = clamp(state.page, 0, doc.pageCount - 1);
+  state.page = i;
+  const { w, h } = doc.pageSizes[i] || doc.pageSizes[0];
+  const stage = $('#stage');
+  const fit = Math.max(0.01, Math.min((stage.clientWidth - 48) / w, (stage.clientHeight - 48) / h));
+  const css = fit * state.zoom;
+  const dpr = window.devicePixelRatio || 1;
+  let px = Math.min(css * dpr, 5000 / Math.max(w, h));
+  px = Math.pow(2, Math.round(Math.log2(px) * 4) / 4);          // quantise so small zoom steps reuse the cache
+  const token = ++pvToken;
+  setStageMessage(null);
+  const badge = $('#pvBadge');
+  let base;
+  const key = i + '|' + px.toFixed(4);
+  if (!doc.cache.has(key)) { badge.hidden = false; badge.innerHTML = '<span class="spin" style="width:12px;height:12px;vertical-align:-2px"></span> Rendering page…'; }
+  try { base = await getBase(doc, i, px); }
+  catch (e) { if (token === pvToken) setStageMessage(`<h3>Couldn't show this page</h3><div>${escapeHtml(friendlyError(e))}</div>`); return; }
+  if (token !== pvToken) return;
+  pv.width = base.width; pv.height = base.height;
+  const marked = pageIsMarked(doc, i);
+  const sNow = settingsFor(doc);
+  const underImage = sNow.layer === 'under' && (doc.kind === 'image' || doc.kind === 'svg');
+  pvCtx.clearRect(0, 0, pv.width, pv.height);
+  if (!underImage || state.before || !marked) pvCtx.drawImage(base, 0, 0);
+  if (!state.before && marked) {
+    pvCtx.save();
+    pvCtx.scale(base.width / w, base.height / h);
+    drawWatermark(pvCtx, w, h, sNow, previewInfo(doc, i));
+    pvCtx.restore();
+    if (underImage) pvCtx.drawImage(base, 0, 0);
+  }
+  pv.style.width = (w * css) + 'px';
+  pv.style.height = (h * css) + 'px';
+  if (state.before) { badge.hidden = false; badge.textContent = 'Original (before)'; }
+  else if (!marked) { badge.hidden = false; badge.textContent = 'No watermark on this page'; }
+  else if (sNow.layer === 'under' && doc.kind === 'pdf') { badge.hidden = false; badge.textContent = 'Preview shows it on top. In the file it sits behind, so white page backgrounds may hide it'; }
+  else if (sNow.layer === 'under' && (doc.kind === 'pptx' || doc.kind === 'docx')) { badge.hidden = false; badge.textContent = 'Preview shows it on top. In the file it sits behind text and shapes'; }
+  else badge.hidden = true;
+  syncStripCurrent();
+}
+function updatePreviewBar() {
+  const doc = activeDoc();
+  const ready = doc && doc.status === 'ready';
+  $('#pvTitle').textContent = doc ? doc.name : 'Preview';
+  $('#pgLabel').textContent = ready ? `${state.page + 1} / ${doc.pageCount}` : '–';
+  $('#prevPg').disabled = !ready || state.page <= 0;
+  $('#nextPg').disabled = !ready || state.page >= doc.pageCount - 1;
+  $('#zoomLabel').textContent = state.zoom === 1 ? 'Fit' : Math.round(state.zoom * 100) + '%';
+  const ba = $('#baBtn');
+  ba.classList.toggle('before', state.before);
+  $('#baLabel').textContent = state.before ? 'Original' : 'With watermark';
+}
+function goPage(i) {
+  const doc = activeDoc();
+  if (!doc || doc.status !== 'ready') return;
+  state.page = clamp(i, 0, doc.pageCount - 1);
+  schedulePreview();
+  const th = $(`.th[data-i="${state.page}"]`);
+  if (th) th.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+}
+function setZoom(z) { state.zoom = clamp(z, 0.25, 4); schedulePreview(); }
+
+// --- Page strip ---
+let stripObserver = null;
+function renderStrip() {
+  const strip = $('#strip');
+  strip.innerHTML = '';
+  if (stripObserver) stripObserver.disconnect();
+  const doc = activeDoc();
+  if (!doc || doc.status !== 'ready' || doc.pageCount < 2) return;
+  stripObserver = new IntersectionObserver(entries => {
+    for (const en of entries) if (en.isIntersecting) { stripObserver.unobserve(en.target); drawThumb(doc, +en.target.dataset.i); }
+  }, { root: strip, rootMargin: '0px 300px' });
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < doc.pageCount; i++) {
+    const el = document.createElement('div');
+    el.className = 'th'; el.dataset.i = i;
+    el.innerHTML = `<div class="box"><canvas></canvas></div><div class="num">${i + 1}</div><button class="mk" title="Watermark on/off for this page" aria-label="Toggle watermark on page ${i + 1}"><svg class="i" viewBox="0 0 24 24"><path d="M5 12.5 10 17l9-10"/></svg></button>`;
+    frag.appendChild(el);
+    stripObserver.observe(el);
+  }
+  strip.appendChild(frag);
+  syncStripMarks();
+  syncStripCurrent();
+}
+async function drawThumb(doc, i) {
+  const el = $(`.th[data-i="${i}"]`);
+  if (!el || activeDoc() !== doc) return;
+  const { w, h } = doc.pageSizes[i];
+  const sc = 160 / Math.max(w, h);
+  let base = doc.thumbs.get(i);
+  if (!base) {
+    try { base = await doc.renderBase(i, sc); doc.thumbs.set(i, base); } catch (e) { return; }
+    if (i === 0) refreshFileThumb(doc);
+  }
+  const cv = el.querySelector('canvas');
+  if (!cv) return;
+  cv.width = base.width; cv.height = base.height;
+  const g = cv.getContext('2d');
+  g.drawImage(base, 0, 0);
+  if (pageIsMarked(doc, i)) { g.save(); g.scale(base.width / w, base.height / h); drawWatermark(g, w, h, settingsFor(doc), previewInfo(doc, i)); g.restore(); }
+  cv.dataset.drawn = '1';
+}
+const refreshThumbs = debounce(() => {
+  const doc = activeDoc();
+  if (!doc) return;
+  $$('.th').forEach(el => { if (el.querySelector('canvas').dataset.drawn) drawThumb(doc, +el.dataset.i); });
+  refreshFileThumb(doc);
+}, 180);
+function syncStripMarks() {
+  const doc = activeDoc();
+  if (!doc) return;
+  $$('.th').forEach(el => el.classList.toggle('off', !pageIsMarked(doc, +el.dataset.i)));
+}
+function syncStripCurrent() { $$('.th').forEach(el => el.classList.toggle('cur', +el.dataset.i === state.page)); }
+function togglePageMark(i) {
+  const doc = activeDoc();
+  if (!doc || wordKeep(doc)) { if (doc && wordKeep(doc)) toast('In Word files the watermark sits in the page header, so it shows on every page. Pick another output format to choose pages.', 'info', 5500); return; }
+  const now = pageIsMarked(doc, i);
+  if (pageModeOn(doc, i) === !now) doc.manual.delete(i); else doc.manual.set(i, !now);
+  syncStripMarks();
+  drawThumb(doc, i);
+  if (i === state.page) schedulePreview();
+  renderPagesUI();
+  updateBottom();
+}
+
+// --- File list ---
+async function makeFileThumb(doc) {
+  if (doc.status !== 'ready') return;
+  if (!doc.thumbs.get(0)) {
+    const { w, h } = doc.pageSizes[0];
+    try { doc.thumbs.set(0, await doc.renderBase(0, 160 / Math.max(w, h))); } catch (e) { return; }
+  }
+  refreshFileThumb(doc);
+}
+function refreshFileThumb(doc) {
+  const holder = $(`.fitem[data-id="${doc.id}"] .fthumb`);
+  const base = doc.thumbs.get(0);
+  if (!holder || !base) return;
+  let cv = holder.querySelector('canvas');
+  if (!cv) { holder.innerHTML = ''; cv = document.createElement('canvas'); holder.appendChild(cv); }
+  cv.width = base.width; cv.height = base.height;
+  const g = cv.getContext('2d');
+  g.drawImage(base, 0, 0);
+  if (pageIsMarked(doc, 0)) { const { w, h } = doc.pageSizes[0]; g.save(); g.scale(base.width / w, base.height / h); drawWatermark(g, w, h, settingsFor(doc), previewInfo(doc, 0)); g.restore(); }
+}
+function renderFileList() {
+  const ul = $('#flist');
+  ul.innerHTML = '';
+  for (const doc of state.docs) {
+    const li = document.createElement('li');
+    li.className = 'fitem' + (doc.id === state.activeId ? ' on' : '');
+    li.dataset.id = doc.id;
+    const sub = doc.status === 'loading' ? 'Opening…' : doc.status === 'error' ? 'Can\'t be used' :
+      `${KIND_LABEL[doc.kind]} · ${doc.pageCount} ${doc.kind === 'pptx' ? (doc.pageCount === 1 ? 'slide' : 'slides') : (doc.pageCount === 1 ? 'page' : 'pages')} · ${fmtSize(doc.size)}`;
+    const tags = [];
+    if (doc.override) tags.push('<span class="tag accent">Own settings</span>');
+    if (doc.status === 'error') tags.push('<span class="tag bad">Error</span>');
+    if (doc.size > 50 * 1048576) tags.push('<span class="tag warn">Large file</span>');
+    if (doc.status === 'ready' && !wordKeep(doc) && markedCount(doc) < doc.pageCount) tags.push(`<span class="tag">${markedCount(doc)}/${doc.pageCount} marked</span>`);
+    li.innerHTML = `
+      <span class="grip" title="Drag to reorder" aria-label="Drag to reorder"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span>
+      <div class="fthumb">${doc.status === 'loading' ? '<span class="spin"></span>' : escapeHtml(doc.ext.toUpperCase())}</div>
+      <div class="fmeta"><div class="fname" title="${escapeHtml(doc.name)}">${escapeHtml(doc.name)}</div><div class="fsub">${sub}</div>${tags.length ? `<div class="ftags">${tags.join('')}</div>` : ''}</div>
+      <button class="icon-btn rm" title="Remove file" aria-label="Remove ${escapeHtml(doc.name)}"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
+    ul.appendChild(li);
+    if (doc.thumbs.get(0)) refreshFileThumb(doc);
+  }
+  $('#filesFoot').hidden = state.docs.length < 2;
+  $('#clearAll').hidden = !state.docs.length;
+  const total = state.docs.reduce((a, d) => a + d.size, 0);
+  $('#filesCount').textContent = `${state.docs.length} files · ${fmtSize(total)}`;
+}
+function selectDoc(id) {
+  if (state.activeId === id) { setView('design'); return; }
+  state.activeId = id;
+  state.page = 0;
+  state.zoom = 1;
+  $$('.fitem').forEach(el => el.classList.toggle('on', +el.dataset.id === id));
+  renderDocPanels();
+  renderStrip();
+  schedulePreview();
+  setView('design');
+}
+function removeDoc(id) {
+  const idx = state.docs.findIndex(d => d.id === id);
+  if (idx < 0) return;
+  const [doc] = state.docs.splice(idx, 1);
+  if (doc.url) URL.revokeObjectURL(doc.url);
+  if (doc.pdf) { try { doc.pdf.cleanup(); } catch (e) { } }
+  if (state.activeId === id) {
+    const nx = state.docs[idx] || state.docs[idx - 1];
+    state.activeId = nx ? nx.id : null;
+    state.page = 0;
+  }
+  if (!state.docs.length) setView('files');
+  renderAll();
+}
+// pointer-based reorder (works with mouse and touch)
+function initReorder() {
+  const ul = $('#flist');
+  let drag = null;
+  ul.addEventListener('pointerdown', e => {
+    const grip = e.target.closest('.grip');
+    if (!grip) return;
+    const li = grip.closest('.fitem');
+    drag = { id: +li.dataset.id, li };
+    li.classList.add('dragging');
+    grip.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  ul.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const over = document.elementFromPoint(e.clientX, e.clientY);
+    const li = over && over.closest('.fitem');
+    if (!li || li === drag.li) return;
+    const rect = li.getBoundingClientRect();
+    const after = e.clientY > rect.top + rect.height / 2;
+    ul.insertBefore(drag.li, after ? li.nextSibling : li);
+  });
+  const end = () => {
+    if (!drag) return;
+    drag.li.classList.remove('dragging');
+    const order = $$('.fitem', ul).map(el => +el.dataset.id);
+    state.docs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    drag = null;
+  };
+  ul.addEventListener('pointerup', end);
+  ul.addEventListener('pointercancel', end);
+}
+
+/* =====================================================================
+   6. SETTINGS UI
+   ===================================================================== */
+function buildStaticUI() {
+  $('#fontSel').innerHTML = FONTS.map(f => `<option value="${f.name}" style="font-family:${f.css.replace(/"/g, "'")}">${f.name}</option>`).join('');
+  $('#quickPresets').innerHTML = QUICK_PRESETS.map((p, i) => `<button class="chip" data-qp="${i}" style="color:${p.color}">${p.text}</button>`).join('');
+  $('#swatches').innerHTML = SWATCHES.map(c => `<button class="sw" data-color="${c}" style="background:${c}" title="${c}" aria-label="Color ${c}"></button>`).join('') +
+    `<input type="color" data-k="color" title="Pick any color" aria-label="Pick any color">`;
+  const pos = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
+  const names = { tl: 'Top left', tc: 'Top center', tr: 'Top right', ml: 'Middle left', mc: 'Center', mr: 'Middle right', bl: 'Bottom left', bc: 'Bottom center', br: 'Bottom right' };
+  $('#grid9').innerHTML = pos.map(p => `<button data-pos="${p}" title="${names[p]}" aria-label="${names[p]}"></button>`).join('');
+}
+function fmtOut(k, v) {
+  if (k === 'rotation') return v + '°';
+  if (k === 'size') return v + ' pt';
+  if (k === 'opacity' || k === 'logoOpacity' || k === 'logoSize' || k === 'margin') return v + '%';
+  if (k === 'offsetX' || k === 'offsetY') return (v > 0 ? '+' : '') + v + '%';
+  if (k === 'gapX' || k === 'gapY') return String(v);
+  return String(v);
+}
+function syncSettingsUI() {
+  const s = editTarget();
+  const doc = activeDoc();
+  $$('[data-k]', $('#settings')).forEach(el => {
+    const k = el.dataset.k;
+    if (document.activeElement === el && el.tagName !== 'SELECT' && el.type !== 'checkbox') return;
+    if (el.type === 'checkbox') el.checked = !!s[k];
+    else el.value = s[k];
+  });
+  $$('[data-out]').forEach(o => o.textContent = fmtOut(o.dataset.out, s[o.dataset.out]));
+  $$('[data-seg]').forEach(seg => $$('button', seg).forEach(b => b.classList.toggle('on', b.dataset.v === s[seg.dataset.seg])));
+  $$('[data-toggle]').forEach(b => b.classList.toggle('on', !!s[b.dataset.toggle]));
+  $$('.sw').forEach(b => b.classList.toggle('on', b.dataset.color.toLowerCase() === (s.color || '').toLowerCase()));
+  $$('#grid9 button').forEach(b => b.classList.toggle('on', b.dataset.pos === s.position));
+  $$('#orient button').forEach(b => b.classList.toggle('on', +b.dataset.rot === +s.rotation));
+  $$('[data-show="text"]').forEach(el => el.hidden = s.type === 'logo');
+  $$('[data-show="logo"]').forEach(el => el.hidden = s.type === 'text');
+  $$('[data-show-layout]').forEach(el => el.hidden = el.dataset.showLayout !== s.layout);
+  // logo box
+  const L = s.logoId && logos.get(s.logoId);
+  $('#logoPrev').innerHTML = L ? `<img src="${L.dataUrl}" alt="">` : '<svg class="i" viewBox="0 0 24 24" style="color:var(--faint)"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>';
+  $('#logoName').textContent = L ? L.name : 'No logo yet';
+  $('#logoRemove').hidden = !L;
+  $('#logoPick').textContent = L ? 'Change' : 'Upload logo';
+  // scope
+  $$('#scopeSeg button').forEach(b => b.classList.toggle('on', b.dataset.scope === (doc && doc.override ? 'one' : 'all')));
+  $('#scopeSeg button[data-scope="one"]').disabled = !doc;
+  $('#scopeHint').textContent = doc && doc.override ? `Changes apply only to “${doc.name}”.` : (state.docs.length > 1 ? `Changes apply to all ${state.docs.length} files (except files with their own settings).` : 'Changes apply to every file.');
+  // layer hint
+  const lh = $('#layerHint');
+  if (s.layer === 'under') {
+    lh.textContent = doc && doc.kind === 'docx' ? 'Word files always keep header watermarks behind the text.' :
+      'Behind content: works for slides, images with transparency and PDFs without a solid page background. On solid images and many PDFs it can be hidden.';
+  } else lh.textContent = doc && doc.kind === 'docx' && doc.format === 'keep' ? 'Word shows header watermarks behind the text, so in Word files it always sits behind.' : '';
+  $('#undoBtn').disabled = hist.idx <= 0;
+  $('#redoBtn').disabled = hist.idx >= hist.stack.length - 1;
+}
+function afterSettingsChange(commit = true) {
+  syncSettingsUI();
+  schedulePreview();
+  refreshThumbs();
+  if (commit) commitHistorySoon();
+}
+function setSetting(k, v) {
+  const s = editTarget();
+  if (s[k] === v) return;
+  s[k] = v;
+  if (k === 'font' || k === 'bold' || k === 'italic') ensureFont(s).then(schedulePreview);
+  afterSettingsChange();
+}
+function bindSettings() {
+  const panel = $('#settings');
+  panel.addEventListener('input', e => {
+    const el = e.target, k = el.dataset.k;
+    if (!k) return;
+    let v = el.type === 'checkbox' ? el.checked : el.value;
+    if (el.type === 'range' || el.type === 'number') v = parseFloat(v);
+    setSetting(k, v);
+  });
+  panel.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.closest('[data-seg]')) { setSetting(b.closest('[data-seg]').dataset.seg, b.dataset.v); return; }
+    if (b.dataset.toggle) { setSetting(b.dataset.toggle, !editTarget()[b.dataset.toggle]); return; }
+    if (b.dataset.color) { setSetting('color', b.dataset.color); return; }
+    if (b.dataset.pos) { setSetting('position', b.dataset.pos); return; }
+    if (b.dataset.rot != null && b.closest('#orient')) { setSetting('rotation', +b.dataset.rot); return; }
+    if (b.dataset.qp != null) {
+      const p = QUICK_PRESETS[+b.dataset.qp], s = editTarget();
+      s.text = p.text; s.color = p.color;
+      if (s.type === 'logo') s.type = 'both';
+      afterSettingsChange();
+      return;
+    }
+    if (b.dataset.var) {
+      const ta = $('#wmText');
+      const s = editTarget();
+      const st = ta.selectionStart ?? ta.value.length, en = ta.selectionEnd ?? ta.value.length;
+      const cur = s.text || '';
+      const sep = st > 0 && !/\s$/.test(cur.slice(0, st)) ? ' ' : '';
+      s.text = cur.slice(0, st) + sep + b.dataset.var + cur.slice(en);
+      ta.value = s.text;
+      ta.focus();
+      const pos = st + sep.length + b.dataset.var.length;
+      ta.setSelectionRange(pos, pos);
+      afterSettingsChange();
+    }
+  });
+  $('#scopeSeg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    const doc = activeDoc();
+    if (!b || !doc) return;
+    if (b.dataset.scope === 'one' && !doc.override) { doc.override = clone(state.global); toast(`“${doc.name}” now has its own watermark settings.`); }
+    else if (b.dataset.scope === 'all' && doc.override) { doc.override = null; toast(`“${doc.name}” uses the shared settings again.`); }
+    else return;
+    renderFileList();
+    afterSettingsChange();
+  });
+  // logo
+  $('#logoPick').onclick = () => $('#logoInput').click();
+  $('#logoInput').onchange = async e => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+      const img = await loadImgEl(dataUrl);
+      if (!img.naturalWidth) throw new UserError('This logo has no size information. Try a PNG instead.');
+      const id = 'logo' + (++logoSeq);
+      logos.set(id, { dataUrl, name: f.name, img });
+      const s = editTarget();
+      s.logoId = id;
+      if (s.type === 'text') s.type = 'both';
+      afterSettingsChange();
+    } catch (err) { toast(friendlyError(err), 'bad'); }
+  };
+  $('#logoRemove').onclick = () => { const s = editTarget(); s.logoId = null; if (s.type === 'logo') s.type = 'text'; afterSettingsChange(); };
+  $('#resetBtn').onclick = () => {
+    const s = editTarget();
+    Object.assign(s, clone(DEFAULTS));
+    afterSettingsChange();
+    toast('Watermark reset to default. Press Ctrl+Z to undo.');
+  };
+  // saved presets
+  $('#presetSave').onclick = savePreset;
+  $('#presetName').addEventListener('keydown', e => { if (e.key === 'Enter') savePreset(); });
+  $('#presetList').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const list = store.get('presets', []);
+    const p = list[+b.dataset.i];
+    if (!p) return;
+    if (b.dataset.act === 'apply') {
+      const s = editTarget();
+      const data = clone(p.settings);
+      if (p.logo) {
+        const id = 'logo' + (++logoSeq);
+        logos.set(id, { dataUrl: p.logo.dataUrl, name: p.logo.name, img: null });
+        loadImgEl(p.logo.dataUrl).then(img => { logos.get(id).img = img; afterSettingsChange(false); });
+        data.logoId = id;
+      } else data.logoId = null;
+      Object.assign(s, DEFAULTS, data);
+      afterSettingsChange();
+      toast(`Applied “${p.name}”.`);
+    } else if (b.dataset.act === 'del') {
+      list.splice(+b.dataset.i, 1);
+      store.set('presets', list);
+      renderPresets();
+    }
+  });
+}
+function savePreset() {
+  const name = $('#presetName').value.trim();
+  if (!name) { $('#presetName').focus(); toast('Type a name for this style first.'); return; }
+  const s = clone(editTarget());
+  const L = s.logoId && logos.get(s.logoId);
+  const entry = { name, settings: s, logo: null };
+  if (L) {
+    if (L.dataUrl.length < 1500000) entry.logo = { dataUrl: L.dataUrl, name: L.name };
+    else toast('The logo is too big to save with the preset, so only the text and style were saved.', 'warn');
+  }
+  delete entry.settings.logoId;
+  const list = store.get('presets', []).filter(p => p.name !== name);
+  list.unshift(entry);
+  if (!store.set('presets', list.slice(0, 30))) { toast("Couldn't save presets in this browser (storage is blocked or full).", 'bad'); return; }
+  $('#presetName').value = '';
+  renderPresets();
+  toast(`Saved “${name}”.`, 'good');
+}
+function renderPresets() {
+  const list = store.get('presets', []);
+  $('#presetList').innerHTML = list.length ? list.map((p, i) => `<div class="preset"><span class="nm" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span><button class="btn small" data-act="apply" data-i="${i}">Apply</button><button class="icon-btn" data-act="del" data-i="${i}" title="Delete preset" aria-label="Delete preset"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div>`).join('')
+    : '<p class="hint" style="margin:0">Save your favourite watermark styles here to reuse them later.</p>';
+}
+
+// ---- Undo / redo (snapshots of all watermark settings) ----
+const hist = { stack: [], idx: -1 };
+function snapshot() {
+  const ov = {};
+  for (const d of state.docs) if (d.override) ov[d.id] = d.override;
+  return JSON.stringify({ g: state.global, ov });
+}
+function commitHistory() {
+  const snap = snapshot();
+  if (hist.stack[hist.idx] === snap) return;
+  hist.stack = hist.stack.slice(0, hist.idx + 1);
+  hist.stack.push(snap);
+  if (hist.stack.length > 100) hist.stack.shift();
+  hist.idx = hist.stack.length - 1;
+  syncUndoButtons();
+}
+const commitHistorySoon = debounce(commitHistory, 350);
+function restore(snap) {
+  const o = JSON.parse(snap);
+  state.global = o.g;
+  for (const d of state.docs) d.override = o.ov[d.id] || null;
+  renderFileList();
+  afterSettingsChange(false);
+}
+function undo() { commitHistory(); if (hist.idx > 0) { hist.idx--; restore(hist.stack[hist.idx]); } syncUndoButtons(); }
+function redo() { if (hist.idx < hist.stack.length - 1) { hist.idx++; restore(hist.stack[hist.idx]); } syncUndoButtons(); }
+function syncUndoButtons() { $('#undoBtn').disabled = hist.idx <= 0; $('#redoBtn').disabled = hist.idx >= hist.stack.length - 1; }
+
+// ---- Pages section ----
+function renderPagesUI() {
+  const body = $('#pagesBody');
+  const doc = activeDoc();
+  if (!doc || doc.status !== 'ready') { body.innerHTML = '<p class="hint" style="margin:0">Select a file to choose its pages.</p>'; return; }
+  if (wordKeep(doc)) {
+    body.innerHTML = `<p class="hint" style="margin:0">This Word file stays a Word file, so the watermark goes into the page header and appears on <b>every page</b> (Word decides where pages break). To pick specific pages, choose PDF or images under <b>Output &amp; convert</b>.</p>`;
+    return;
+  }
+  const n = doc.pageCount;
+  const unit = doc.kind === 'pptx' ? 'slides' : 'pages';
+  const r = doc.pageMode === 'custom' ? parseRange(doc.range, n) : null;
+  body.innerHTML = `
+    <div class="field">
+      <label for="pgMode">Put the watermark on</label>
+      <select id="pgMode">
+        <option value="all">All ${unit}</option>
+        <option value="odd">Odd ${unit} (1, 3, 5…)</option>
+        <option value="even">Even ${unit} (2, 4, 6…)</option>
+        <option value="first">First ${unit.slice(0, -1)} only</option>
+        <option value="last">Last ${unit.slice(0, -1)} only</option>
+        <option value="custom">Custom ${unit}…</option>
+      </select>
+    </div>
+    <div class="field" ${doc.pageMode === 'custom' ? '' : 'hidden'}>
+      <label for="pgRange">Which ${unit}?</label>
+      <input type="text" id="pgRange" placeholder="e.g. 1-3, 5, 8-10" value="${escapeHtml(doc.range)}">
+      <p class="hint ${r && r.bad.length ? 'bad' : ''}">${r && r.bad.length ? `Couldn't understand: ${escapeHtml(r.bad.join(', '))}. Use numbers between 1 and ${n}.` : `Use commas and dashes. “8-” means 8 to the end.`}</p>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <span class="hint" style="margin:0">Watermark on <b>${markedCount(doc)}</b> of ${n} ${unit}${doc.manual.size ? ` · ${doc.manual.size} changed by hand` : ''}</span>
+      ${doc.manual.size ? '<button class="btn small ghost" id="pgResetManual">Undo hand picks</button>' : ''}
+    </div>
+    ${n > 1 ? `<p class="hint">Tip: tap the ✓ on a page thumbnail below the preview to switch a single ${unit.slice(0, -1)} on or off. Shortcut: <span class="kbd">W</span></p>` : ''}
+    ${state.docs.filter(d => d.status === 'ready' && !wordKeep(d)).length > 1 ? '<button class="btn small" id="pgApplyAll" style="margin-top:8px">Use this page choice for all files</button>' : ''}`;
+  $('#pgMode').value = doc.pageMode;
+  $('#pgMode').onchange = e => { doc.pageMode = e.target.value; doc.manual.clear(); pagesChanged(); };
+  const rg = $('#pgRange');
+  if (rg) rg.addEventListener('input', debounce(e => { doc.range = e.target.value; doc.manual.clear(); pagesChanged(true); }, 300));
+  const rm = $('#pgResetManual');
+  if (rm) rm.onclick = () => { doc.manual.clear(); pagesChanged(); };
+  const pa = $('#pgApplyAll');
+  if (pa) pa.onclick = () => {
+    for (const d of state.docs) if (d !== doc && d.status === 'ready') { d.pageMode = doc.pageMode; d.range = doc.range; d.manual.clear(); }
+    renderFileList(); toast('Page choice applied to all files.');
+  };
+}
+function pagesChanged(keepFocus) {
+  const doc = activeDoc();
+  if (keepFocus) {
+    // update only the summary without re-rendering the input
+    const r = parseRange(doc.range, doc.pageCount);
+    const hint = $('#pgRange') && $('#pgRange').nextElementSibling;
+    if (hint) { hint.className = 'hint' + (r.bad.length ? ' bad' : ''); hint.textContent = r.bad.length ? `Couldn't understand: ${r.bad.join(', ')}. Use numbers between 1 and ${doc.pageCount}.` : 'Use commas and dashes. “8-” means 8 to the end.'; }
+    const sum = $('#pagesBody .row .hint');
+    if (sum) sum.innerHTML = `Watermark on <b>${markedCount(doc)}</b> of ${doc.pageCount} ${doc.kind === 'pptx' ? 'slides' : 'pages'}`;
+  } else renderPagesUI();
+  syncStripMarks();
+  refreshThumbs();
+  schedulePreview();
+  renderFileList();
+  updateBottom();
+}
+
+// ---- Output section ----
+function formatsFor(doc) {
+  switch (doc.kind) {
+    case 'pdf': return [
+      { v: 'keep', ext: 'pdf', label: 'PDF (same format)', q: 'best', note: 'Text stays selectable. The watermark is added to the pages you chose.' },
+      { v: 'png', ext: 'png', label: 'Images – PNG', q: 'best', note: 'One sharp image per page.' },
+      { v: 'jpg', ext: 'jpg', label: 'Images – JPG', q: 'best', note: 'One image per page, smaller files.' },
+      { v: 'docx-image', ext: 'docx', label: 'Word – looks the same', q: 'good', note: 'Each page becomes a picture inside Word. Looks identical, but the text can\'t be edited.' },
+      { v: 'docx-text', ext: 'docx', label: 'Word – editable text', q: 'basic', note: 'You can edit the text, but pictures, tables and layout are lost. Scanned PDFs have no text to extract.' },
+    ];
+    case 'image': {
+      const same = doc.ext === 'jpeg' ? 'jpg' : doc.ext;
+      const list = [{ v: 'keep', ext: doc.ext, label: `${same.toUpperCase()} (same format)`, q: 'best', note: 'Same size and format as the original.' },
+        { v: 'pdf', ext: 'pdf', label: 'PDF', q: 'best', note: 'The image is placed on a PDF page (see page size options below).' }];
+      for (const f of ['png', 'jpg', 'webp']) if (f !== same) list.push({ v: f, ext: f, label: f.toUpperCase(), q: 'best', note: f === 'jpg' ? 'Smaller file. Transparent areas become white.' : f === 'png' ? 'Lossless, keeps transparency.' : 'Modern format, small files.' });
+      return list;
+    }
+    case 'svg': return [
+      { v: 'keep', ext: 'svg', label: 'SVG (same format)', q: 'best', note: 'Stays SVG. The watermark is added as a picture layer on top.' },
+      { v: 'png', ext: 'png', label: 'PNG', q: 'best', note: 'Turned into a sharp picture.' },
+      { v: 'jpg', ext: 'jpg', label: 'JPG', q: 'best', note: 'Transparent areas become white.' },
+      { v: 'pdf', ext: 'pdf', label: 'PDF', q: 'good', note: 'Placed on a PDF page as a high-resolution picture.' },
+    ];
+    case 'docx': return [
+      { v: 'keep', ext: 'docx', label: 'Word (same format)', q: 'best', note: 'Stays an editable Word file. The watermark is put in the page header, so it shows on every page.' },
+      { v: 'pdf', ext: 'pdf', label: 'PDF', q: 'basic', note: 'Pages are redrawn as pictures. Complex layouts (columns, text boxes, special fonts) may shift, and text isn\'t selectable.' },
+      { v: 'png', ext: 'png', label: 'Images – PNG', q: 'basic', note: 'One image per page. Same layout limits as PDF.' },
+    ];
+    case 'pptx': return [
+      { v: 'keep', ext: 'pptx', label: 'PowerPoint (same format)', q: 'best', note: 'Stays editable. A watermark picture is added to the slides you chose.' },
+      { v: 'pdf', ext: 'pdf', label: 'PDF', q: 'basic', note: 'Text, shapes and pictures are redrawn. Animations, charts, SmartArt and some designs won\'t fully carry over.' },
+      { v: 'png', ext: 'png', label: 'Images – PNG', q: 'basic', note: 'One image per slide. Same limits as PDF.' },
+    ];
+    case 'txt': return [
+      { v: 'pdf', ext: 'pdf', label: 'PDF', q: 'good', note: 'Text is laid out on A4 pages (as pictures, so not selectable).' },
+      { v: 'docx', ext: 'docx', label: 'Word', q: 'good', note: 'Editable Word file. The watermark goes in the page header.' },
+      { v: 'png', ext: 'png', label: 'Images – PNG', q: 'good', note: 'One image per page.' },
+    ];
+  }
+  return [{ v: 'none', ext: '', label: '—', q: 'basic', note: '' }];
+}
+const Q_LABEL = { best: 'Best results', good: 'Good', basic: 'Basic quality' };
+function qBadge(q) { return `<span class="q q-${q}">${Q_LABEL[q]}</span>`; }
+function renderOutputUI() {
+  const body = $('#outBody');
+  const doc = activeDoc();
+  const o = state.out;
+  let html = '';
+  if (doc && doc.status === 'ready') {
+    html += `<div class="lbl">Save “${escapeHtml(doc.name)}” as</div><div class="fmt-opt">` +
+      formatsFor(doc).map(f => `<label class="fmt-row ${doc.format === f.v ? 'on' : ''}"><input type="radio" name="fmt" value="${f.v}" ${doc.format === f.v ? 'checked' : ''}><div><div class="t">${f.label} ${qBadge(f.q)}</div><div class="d">${f.note}</div></div></label>`).join('') + '</div>';
+  } else html += '<p class="hint" style="margin:0 0 8px">Select a file to choose its output format.</p>';
+  if (state.docs.length > 1) {
+    html += `<div class="subhead">Set all files to</div><div class="chips">
+      <button class="chip" data-all="keep">Same format</button><button class="chip" data-all="pdf">PDF</button>
+      <button class="chip" data-all="png">PNG images</button><button class="chip" data-all="jpg">JPG images</button><button class="chip" data-all="docx">Word</button></div>
+      <p class="hint">Files that can't be converted to the chosen type keep their current choice.</p>`;
+  }
+  html += `<div class="subhead">Images → PDF</div>
+    <div class="row"><div class="grow"><label class="lbl" for="oPage">Page size</label><select id="oPage"><option value="a4">A4</option><option value="letter">Letter</option><option value="fit">Fit to image</option></select></div>
+    <div class="grow"><label class="lbl" for="oOrient">Orientation</label><select id="oOrient"><option value="auto">Automatic</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div></div>
+    <div class="field" style="margin-top:10px"><div class="lbl">Page margin <output id="oMarginV">${o.margin} pt</output></div><input type="range" id="oMargin" min="0" max="72" step="2" value="${o.margin}"></div>
+    <div class="subhead">Quality</div>
+    <div class="row"><div class="grow"><label class="lbl" for="oDpi">Page resolution</label><select id="oDpi"><option value="100">Small (100 DPI)</option><option value="150">Standard (150 DPI)</option><option value="220">High (220 DPI)</option><option value="300">Print (300 DPI)</option></select></div>
+    <div class="grow"><div class="lbl">JPG quality <output id="oJpgV">${o.jpgQ}%</output></div><input type="range" id="oJpg" min="40" max="100" value="${o.jpgQ}"></div></div>
+    <p class="hint">Resolution is used when pages are turned into pictures (PDF → images, Word/PowerPoint → PDF).</p>
+    <div class="subhead">File names</div>
+    <label class="lbl" for="oSuffix">Add to the end of each name</label>
+    <input type="text" id="oSuffix" value="${escapeHtml(o.suffix)}" placeholder="_watermarked">
+    <p class="hint">Example: report${escapeHtml(o.suffix)}.pdf</p>`;
+  body.innerHTML = html;
+  $('#oPage').value = o.pageSize; $('#oOrient').value = o.orient; $('#oDpi').value = String(o.dpi);
+  const save = () => { store.set('out', { suffix: o.suffix, pageSize: o.pageSize, orient: o.orient, margin: o.margin, dpi: o.dpi, jpgQ: o.jpgQ }); };
+  body.querySelectorAll('input[name=fmt]').forEach(r => r.onchange = () => { doc.format = r.value; formatChanged(doc); });
+  body.querySelectorAll('[data-all]').forEach(b => b.onclick = () => {
+    let n = 0;
+    for (const d of state.docs) { if (d.status !== 'ready') continue; const v = quickFormat(d, b.dataset.all); if (v) { d.format = v; n++; } }
+    formatChanged(doc);
+    toast(`Updated ${n} file${n === 1 ? '' : 's'}.`);
+  });
+  $('#oPage').onchange = e => { o.pageSize = e.target.value; save(); };
+  $('#oOrient').onchange = e => { o.orient = e.target.value; save(); };
+  $('#oMargin').oninput = e => { o.margin = +e.target.value; $('#oMarginV').textContent = o.margin + ' pt'; save(); };
+  $('#oDpi').onchange = e => { o.dpi = +e.target.value; save(); };
+  $('#oJpg').oninput = e => { o.jpgQ = +e.target.value; $('#oJpgV').textContent = o.jpgQ + '%'; save(); };
+  $('#oSuffix').oninput = e => { o.suffix = e.target.value.replace(/[\\/:*?"<>|]/g, ''); e.target.nextElementSibling.textContent = `Example: report${o.suffix}.pdf`; save(); };
+}
+function quickFormat(d, q) {
+  const opts = formatsFor(d).map(f => f.v);
+  const want = {
+    keep: opts.includes('keep') ? 'keep' : null,
+    pdf: d.kind === 'pdf' ? 'keep' : (opts.includes('pdf') ? 'pdf' : null),
+    png: d.kind === 'image' && d.ext === 'png' ? 'keep' : (opts.includes('png') ? 'png' : null),
+    jpg: d.kind === 'image' && /jpe?g/.test(d.ext) ? 'keep' : (opts.includes('jpg') ? 'jpg' : null),
+    docx: d.kind === 'docx' ? 'keep' : d.kind === 'pdf' ? 'docx-image' : (opts.includes('docx') ? 'docx' : null),
+  }[q];
+  return want;
+}
+function formatChanged(doc) {
+  renderOutputUI();
+  if (doc) { renderPagesUI(); syncStripMarks(); refreshThumbs(); }
+  syncSettingsUI();
+  schedulePreview();
+  renderFileList();
+  updateBottom();
+  if ($('#exportDlg').open) renderExportList();
+}
+
+function renderDocPanels() { syncSettingsUI(); renderPagesUI(); renderOutputUI(); }
+function renderAll() { renderFileList(); renderDocPanels(); renderStrip(); schedulePreview(); updateBottom(); updateSteps(); }
+function updateBottom() {
+  const ready = state.docs.filter(d => d.status === 'ready');
+  const loading = state.docs.filter(d => d.status === 'loading').length;
+  $('#exportBtn').disabled = !ready.length;
+  let t = !state.docs.length ? 'No files yet. Add files on the left to start.' :
+    `${ready.length} file${ready.length === 1 ? '' : 's'} ready` + (loading ? ` · ${loading} opening…` : '') +
+    (state.docs.length - ready.length - loading ? ` · ${state.docs.length - ready.length - loading} can't be used` : '');
+  if (ready.length) {
+    const pages = ready.reduce((a, d) => a + (wordKeep(d) ? d.pageCount : markedCount(d)), 0);
+    t += ` · watermark on ${pages} page${pages === 1 ? '' : 's'}`;
+  }
+  $('#bottomSummary').textContent = t;
+  updateSteps();
+}
+let currentView = 'files';
+function setView(v) {
+  currentView = v;
+  document.body.dataset.view = v;
+  updateSteps();
+}
+function updateSteps() {
+  const has = state.docs.length > 0;
+  const s1 = $('.step[data-step="1"]'), s2 = $('.step[data-step="2"]'), s3 = $('.step[data-step="3"]');
+  s1.classList.toggle('done', has);
+  s1.classList.toggle('on', currentView === 'files' || !has);
+  s2.classList.toggle('on', has && currentView === 'design');
+  s3.classList.toggle('on', $('#exportDlg').open);
+}
+
+/* =====================================================================
+   7. OUTPUT BUILDERS & CONVERTERS
+   ===================================================================== */
+const PAGE_SIZES = { a4: [595.28, 841.89], letter: [612, 792] };
+let cancelRequested = false;
+function checkCancel() { if (cancelRequested) throw new UserError('Stopped.'); }
+const dpiScale = () => state.out.dpi / 72;
+const jpgQ = () => state.out.jpgQ / 100;
+
+/** A page rendered as a picture with the watermark burnt in. */
+async function renderedPage(doc, i, scale) {
+  const c = await doc.renderBase(i, scale);
+  if (pageIsMarked(doc, i)) {
+    const { w, h } = doc.pageSizes[i];
+    const g = c.getContext('2d');
+    const s = settingsFor(doc);
+    g.save();
+    g.scale(c.width / w, c.height / h);
+    if (s.layer === 'under' && (doc.kind === 'image' || doc.kind === 'svg')) {
+      // draw the watermark first, then the picture over it, so transparent areas reveal it
+      const top = makeCanvas(c.width, c.height);
+      top.getContext('2d').drawImage(c, 0, 0);
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height); g.scale(c.width / w, c.height / h);
+      drawWatermark(g, w, h, s, infoFor(doc, i));
+      g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(top, 0, 0);
+    } else drawWatermark(g, w, h, s, infoFor(doc, i));
+    g.restore();
+  }
+  return c;
+}
+function whiteBg(c) {
+  const o = makeCanvas(c.width, c.height);
+  const g = o.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, o.width, o.height);
+  g.drawImage(c, 0, 0);
+  return o;
+}
+const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+
+/* ---- PDF: add watermark (keeps text selectable) ---- */
+async function watermarkPdfBytes(doc, onP) {
+  const PDFLib = await loadLib('pdflib');
+  const { PDFDocument, degrees, PDFArray } = PDFLib;
+  let pdf;
+  try { pdf = await PDFDocument.load(doc.bytes, { updateMetadata: false }); }
+  catch (e) {
+    if (/encrypt/i.test(e.message || '')) throw new UserError('This PDF is password-protected or has editing restrictions. Please unlock it first, then add it again.');
+    throw new UserError("This PDF couldn't be edited. It may be damaged.");
+  }
+  const s = settingsFor(doc);
+  if (!hasWatermark(s)) return doc.bytes;
+  const pages = pdf.getPages();
+  const reuse = !usesPageVars(s);
+  const imgCache = new Map();
+  for (let i = 0; i < pages.length; i++) {
+    checkCancel();
+    if (!pageIsMarked(doc, i)) continue;
+    const page = pages[i];
+    const rot = ((page.getRotation().angle % 360) + 360) % 360;
+    const box = page.getCropBox();
+    const side = rot === 90 || rot === 270;
+    const vw = side ? box.height : box.width, vh = side ? box.width : box.height;
+    const key = reuse ? `${Math.round(vw)}x${Math.round(vh)}` : 'p' + i;
+    let img = imgCache.get(key);
+    if (!img) {
+      const layer = renderLayer(vw, vh, s, infoFor(doc, i));
+      img = await pdf.embedPng(await canvasToBytes(layer, 'image/png'));
+      imgCache.set(key, img);
+    }
+    const o = { 0: { x: box.x, y: box.y }, 90: { x: box.x + box.width, y: box.y }, 180: { x: box.x + box.width, y: box.y + box.height }, 270: { x: box.x, y: box.y + box.height } }[rot] || { x: box.x, y: box.y };
+    page.drawImage(img, { x: o.x, y: o.y, width: vw, height: vh, rotate: degrees(rot) });
+    if (s.layer === 'under') {
+      // move our drawing to the start of the page so the original content paints over it
+      const contents = page.node.Contents();
+      if (contents instanceof PDFArray && contents.size() > 1) {
+        const last = contents.get(contents.size() - 1);
+        contents.remove(contents.size() - 1);
+        contents.insert(0, last);
+      }
+    }
+    if (onP) onP((i + 1) / pages.length);
+    if (i % 5 === 4) await yieldUI();
+  }
+  return await pdf.save();
+}
+
+/* ---- Pages → images ---- */
+async function pagesToImages(doc, fmt, base, onP) {
+  const files = [];
+  const scale = (doc.kind === 'image') ? 1 : (doc.kind === 'svg' ? svgScale(doc) : dpiScale());
+  const n = doc.pageCount;
+  for (let i = 0; i < n; i++) {
+    checkCancel();
+    let c = await renderedPage(doc, i, scale);
+    if (fmt === 'jpg') c = whiteBg(c);
+    const blob = await canvasToBlob(c, MIME[fmt], jpgQ());
+    files.push({ name: n === 1 ? `${base}.${fmt}` : `${base}_${doc.kind === 'pptx' ? 'slide' : 'page'}${pad(i + 1, String(n).length < 2 ? 2 : String(n).length)}.${fmt}`, blob });
+    if (onP) onP((i + 1) / n);
+    await yieldUI();
+  }
+  return files;
+}
+function svgScale(doc) { const { w, h } = doc.pageSizes[0]; return Math.max(1, Math.min(8, 2000 / Math.max(w, h))); }
+
+/* ---- Image/SVG → PDF ---- */
+async function imagesToPdfBytes(docs, onP) {
+  const { PDFDocument } = await loadLib('pdflib');
+  const pdf = await PDFDocument.create();
+  for (let k = 0; k < docs.length; k++) {
+    await addImageDocPage(pdf, docs[k]);
+    if (onP) onP((k + 1) / docs.length);
+  }
+  return await pdf.save();
+}
+async function addImageDocPage(pdf, doc) {
+  checkCancel();
+  const c = await renderedPage(doc, 0, doc.kind === 'svg' ? svgScale(doc) : 1);
+  const asJpg = doc.kind === 'image' && /jpe?g/.test(doc.ext);
+  const img = asJpg ? await pdf.embedJpg(await canvasToBytes(whiteBg(c), 'image/jpeg', jpgQ())) : await pdf.embedPng(await canvasToBytes(c, 'image/png'));
+  const o = state.out;
+  const iw = doc.kind === 'svg' ? doc.pageSizes[0].w : c.width * 0.75, ih = doc.kind === 'svg' ? doc.pageSizes[0].h : c.height * 0.75; // px at 96 DPI → pt
+  let pw, ph;
+  if (o.pageSize === 'fit') { pw = iw + o.margin * 2; ph = ih + o.margin * 2; }
+  else {
+    [pw, ph] = PAGE_SIZES[o.pageSize];
+    const land = o.orient === 'landscape' || (o.orient === 'auto' && iw > ih);
+    if (land) [pw, ph] = [ph, pw];
+  }
+  const aw = pw - o.margin * 2, ah = ph - o.margin * 2;
+  const sc = o.pageSize === 'fit' ? 1 : Math.min(aw / iw, ah / ih);
+  const dw = iw * sc, dh = ih * sc;
+  const page = pdf.addPage([pw, ph]);
+  page.drawImage(img, { x: (pw - dw) / 2, y: (ph - dh) / 2, width: dw, height: dh });
+}
+
+/* ---- Anything rendered → PDF (Word, PowerPoint, text) ---- */
+async function renderedPdfBytes(doc, onP) {
+  const { PDFDocument } = await loadLib('pdflib');
+  const pdf = await PDFDocument.create();
+  const n = doc.pageCount;
+  for (let i = 0; i < n; i++) {
+    checkCancel();
+    const c = whiteBg(await renderedPage(doc, i, dpiScale()));
+    const img = await pdf.embedJpg(await canvasToBytes(c, 'image/jpeg', Math.max(jpgQ(), 0.85)));
+    const { w, h } = doc.pageSizes[i];
+    pdf.addPage([w, h]).drawImage(img, { x: 0, y: 0, width: w, height: h });
+    if (onP) onP((i + 1) / n);
+    await yieldUI();
+  }
+  return await pdf.save();
+}
+
+/* ---- Word: add watermark to headers (stays editable) ---- */
+function xmlSnippet(inner) {
+  const d = parseXml(`<root xmlns:w="${NS_W}" xmlns:r="${NS_R}" xmlns:wp="${NS_WP}" xmlns:a="${NS_A}" xmlns:pic="${NS_PIC}" xmlns:p="${NS_P}">${inner}</root>`);
+  return d.documentElement.firstElementChild;
+}
+function ensureDefaultCT(ct, ext, type) {
+  const root = ct.documentElement;
+  const has = [...root.getElementsByTagNameNS(NS_CT, 'Default')].some(d => (d.getAttribute('Extension') || '').toLowerCase() === ext);
+  if (has) return;
+  const d = ct.createElementNS(NS_CT, 'Default');
+  d.setAttribute('Extension', ext); d.setAttribute('ContentType', type);
+  root.insertBefore(d, root.firstChild);
+}
+function addOverrideCT(ct, partName, type) {
+  const o = ct.createElementNS(NS_CT, 'Override');
+  o.setAttribute('PartName', partName); o.setAttribute('ContentType', type);
+  ct.documentElement.appendChild(o);
+}
+function addRel(relsDoc, type, target) {
+  const root = relsDoc.documentElement;
+  const ids = new Set([...root.getElementsByTagNameNS(NS_REL, 'Relationship')].map(r => r.getAttribute('Id')));
+  let n = 1; while (ids.has('rIdWm' + n)) n++;
+  const r = relsDoc.createElementNS(NS_REL, 'Relationship');
+  r.setAttribute('Id', 'rIdWm' + n); r.setAttribute('Type', type); r.setAttribute('Target', target);
+  root.appendChild(r);
+  return 'rIdWm' + n;
+}
+const EMPTY_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="${NS_REL}"/>`;
+async function readXmlOr(zip, path, fallback) { const f = zip.file(path); return parseXml(f ? await f.async('string') : fallback); }
+
+async function watermarkDocxBytes(bytes, s, info) {
+  if (!hasWatermark(s)) return bytes;
+  const zip = await openZip(bytes, 'Word');
+  const docPath = 'word/document.xml';
+  const docXml = await readXmlOr(zip, docPath, '');
+  const rels = await readXmlOr(zip, 'word/_rels/document.xml.rels', EMPTY_RELS);
+  const ct = await readXmlOr(zip, '[Content_Types].xml', '');
+  const settingsF = zip.file('word/settings.xml');
+  const evenOdd = settingsF ? /<w:evenAndOddHeaders(?![^>]*w:val="(false|0|off)")/.test(await settingsF.async('string')) : false;
+  const sects = [...docXml.getElementsByTagNameNS(NS_W, 'sectPr')].filter(sp => !sp.parentNode || sp.parentNode.localName !== 'sectPrChange');
+  if (!sects.length) { const body = desc(docXml, NS_W, 'body'); const sp = docXml.createElementNS(NS_W, 'w:sectPr'); body.appendChild(sp); sects.push(sp); }
+  const relMap = {};
+  for (const r of [...rels.getElementsByTagNameNS(NS_REL, 'Relationship')]) relMap[r.getAttribute('Id')] = r.getAttribute('Target');
+  const headerParts = new Set();
+  for (const sp of sects) for (const hr of kids(sp, NS_W, 'headerReference')) {
+    const t = relMap[hr.getAttributeNS(NS_R, 'id') || hr.getAttribute('r:id')];
+    if (t) headerParts.add(resolvePath('word', t));
+  }
+  // The first section needs a header for each page type it uses; later sections inherit.
+  const first = sects[0];
+  const need = ['default'];
+  if (kid(first, NS_W, 'titlePg') && wAttr(kid(first, NS_W, 'titlePg'), 'val') !== '0' && wAttr(kid(first, NS_W, 'titlePg'), 'val') !== 'false') need.push('first');
+  if (evenOdd) need.push('even');
+  let hn = 1;
+  for (const type of need) {
+    if (kids(first, NS_W, 'headerReference').some(h => wAttr(h, 'type') === type)) continue;
+    while (zip.file(`word/headerWm${hn}.xml`)) hn++;
+    const name = `headerWm${hn++}.xml`;
+    zip.file('word/' + name, `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:hdr xmlns:w="${NS_W}" xmlns:r="${NS_R}"><w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr></w:p></w:hdr>`);
+    const rid = addRel(rels, REL_HEADER, name);
+    addOverrideCT(ct, '/word/' + name, 'application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml');
+    const hr = docXml.createElementNS(NS_W, 'w:headerReference');
+    hr.setAttributeNS(NS_W, 'w:type', type);
+    hr.setAttributeNS(NS_R, 'r:id', rid);
+    first.insertBefore(hr, first.firstChild);
+    headerParts.add('word/' + name);
+  }
+  // Watermark picture the size of the page
+  const pgSz = kid(first, NS_W, 'pgSz');
+  const twW = parseFloat(wAttr(pgSz, 'w')) || 12240, twH = parseFloat(wAttr(pgSz, 'h')) || 15840;
+  const Wpt = twW / 20, Hpt = twH / 20;
+  const layer = renderLayer(Wpt, Hpt, s, info);
+  let mediaName = 'wm_watermark.png', mn = 1;
+  while (zip.file('word/media/' + mediaName)) mediaName = `wm_watermark${++mn}.png`;
+  zip.file('word/media/' + mediaName, await canvasToBytes(layer, 'image/png'));
+  ensureDefaultCT(ct, 'png', 'image/png');
+  const cx = Math.round(twW * 635), cy = Math.round(twH * 635);
+  let docPrId = 7300;
+  for (const hp of headerParts) {
+    const f = zip.file(hp);
+    if (!f) continue;
+    const hdr = parseXml(await f.async('string'));
+    const hRelsPath = relsPathFor(hp);
+    const hRels = await readXmlOr(zip, hRelsPath, EMPTY_RELS);
+    const rid = addRel(hRels, REL_IMAGE, 'media/' + mediaName);
+    const id = docPrId++;
+    const run = xmlSnippet(`<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="251658240" behindDoc="1" locked="1" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionV><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/><wp:docPr id="${id}" name="Watermark ${id}" descr="Watermark"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${id}" name="${mediaName}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r>`);
+    const root = hdr.documentElement;
+    let para = kid(root, NS_W, 'p');
+    if (!para) { para = hdr.createElementNS(NS_W, 'w:p'); root.insertBefore(para, root.firstChild); }
+    para.appendChild(hdr.importNode(run, true));
+    zip.file(hp, serializeXml(hdr));
+    zip.file(hRelsPath, serializeXml(hRels));
+  }
+  zip.file(docPath, serializeXml(docXml));
+  zip.file('word/_rels/document.xml.rels', serializeXml(rels));
+  zip.file('[Content_Types].xml', serializeXml(ct));
+  return await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+}
+
+/* ---- PowerPoint: add a watermark picture to each chosen slide (stays editable) ---- */
+async function watermarkPptxBytes(doc, onP) {
+  const s = settingsFor(doc);
+  if (!hasWatermark(s)) return doc.bytes;
+  const zip = await openZip(doc.bytes, 'PowerPoint');
+  const P = doc.pptx;
+  const ct = await readXmlOr(zip, '[Content_Types].xml', '');
+  ensureDefaultCT(ct, 'png', 'image/png');
+  const cx = Math.round(P.W * 12700), cy = Math.round(P.H * 12700);
+  const reuse = !usesPageVars(s);
+  let sharedMedia = null, mediaN = 1;
+  for (let i = 0; i < P.slides.length; i++) {
+    checkCancel();
+    if (!pageIsMarked(doc, i)) continue;
+    const path = P.slides[i];
+    let media = reuse ? sharedMedia : null;
+    if (!media) {
+      while (zip.file(`ppt/media/wm_watermark${mediaN}.png`)) mediaN++;
+      media = `ppt/media/wm_watermark${mediaN++}.png`;
+      zip.file(media, await canvasToBytes(renderLayer(P.W, P.H, s, infoFor(doc, i)), 'image/png'));
+      if (reuse) sharedMedia = media;
+    }
+    const slide = parseXml(await zip.file(path).async('string'));
+    const relsPath = relsPathFor(path);
+    const rels = await readXmlOr(zip, relsPath, EMPTY_RELS);
+    const rid = addRel(rels, REL_IMAGE, '../media/' + media.split('/').pop());
+    let maxId = 1;
+    for (const el of [...slide.getElementsByTagNameNS(NS_P, 'cNvPr')]) maxId = Math.max(maxId, parseInt(el.getAttribute('id')) || 0);
+    const pic = xmlSnippet(`<p:pic><p:nvPicPr><p:cNvPr id="${maxId + 1}" name="Watermark" descr="Watermark"/><p:cNvPicPr><a:picLocks noGrp="1" noChangeAspect="1"/></p:cNvPicPr><p:nvPr userDrawn="1"/></p:nvPicPr><p:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`);
+    const tree = desc(slide, NS_P, 'spTree');
+    if (!tree) continue;
+    const node = slide.importNode(pic, true);
+    if (s.layer === 'under') {
+      const grpPr = kid(tree, NS_P, 'grpSpPr');
+      tree.insertBefore(node, grpPr ? grpPr.nextSibling : tree.firstChild);
+    } else {
+      const ext = kid(tree, NS_P, 'extLst');
+      tree.insertBefore(node, ext || null);
+    }
+    zip.file(path, serializeXml(slide));
+    zip.file(relsPath, serializeXml(rels));
+    if (onP) onP((i + 1) / P.slides.length);
+    if (i % 4 === 3) await yieldUI();
+  }
+  zip.file('[Content_Types].xml', serializeXml(ct));
+  return await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+}
+
+/* ---- Word writer helpers ---- */
+function docxPage(D, wPt, hPt, margin) {
+  const tw = v => Math.round(v * 20);
+  const land = wPt > hPt;
+  const m = tw(margin);
+  return {
+    page: {
+      size: land ? { width: tw(hPt), height: tw(wPt), orientation: D.PageOrientation.LANDSCAPE } : { width: tw(wPt), height: tw(hPt), orientation: D.PageOrientation.PORTRAIT },
+      margin: { top: m, right: m, bottom: m, left: m, header: Math.min(m, 708), footer: Math.min(m, 708) },
+    }
+  };
+}
+async function packDocx(D, document) {
+  const blob = await D.Packer.toBlob(document);
+  return fixDocxJpegs(new Uint8Array(await blob.arrayBuffer()));
+}
+/** The Word writer names every picture ".png"; give JPEG pictures a ".jpg" name so every app can open them. */
+async function fixDocxJpegs(bytes) {
+  const zip = await openZip(bytes, 'Word');
+  const media = Object.keys(zip.files).filter(p => /^word\/media\/[^/]+\.png$/i.test(p));
+  const renamed = {};
+  for (const p of media) {
+    const data = await zip.file(p).async('uint8array');
+    if (data[0] === 0xFF && data[1] === 0xD8) {
+      const np = p.replace(/\.png$/i, '.jpg');
+      zip.remove(p); zip.file(np, data);
+      renamed[p.slice(5)] = np.slice(5);           // paths relative to word/
+    }
+  }
+  if (!Object.keys(renamed).length) return bytes;
+  for (const relPath of Object.keys(zip.files).filter(p => /^word\/_rels\/.*\.rels$/.test(p))) {
+    let x = await zip.file(relPath).async('string');
+    for (const [a, b] of Object.entries(renamed)) x = x.split(`"${a}"`).join(`"${b}"`).split(`"/word/${a}"`).join(`"/word/${b}"`);
+    zip.file(relPath, x);
+  }
+  const ct = await readXmlOr(zip, '[Content_Types].xml', '');
+  ensureDefaultCT(ct, 'jpg', 'image/jpeg');
+  zip.file('[Content_Types].xml', serializeXml(ct));
+  return await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+}
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+/* ---- PDF → Word (pages as pictures) ---- */
+async function pdfToDocxImages(doc, onP) {
+  const D = await loadLib('docx');
+  const sections = [];
+  const n = doc.pageCount;
+  const sc = Math.min(dpiScale(), 200 / 72);
+  for (let i = 0; i < n; i++) {
+    checkCancel();
+    const c = whiteBg(await renderedPage(doc, i, sc));
+    const data = await canvasToBytes(c, 'image/jpeg', Math.max(jpgQ(), 0.85));
+    const { w, h } = doc.pageSizes[i];
+    sections.push({
+      properties: docxPage(D, w, h, 0),
+      children: [new D.Paragraph({ spacing: { before: 0, after: 0 }, children: [new D.ImageRun({ data, transformation: { width: Math.floor(w * PT2PX * 0.985), height: Math.floor(h * PT2PX * 0.985) } })] })],
+    });
+    if (onP) onP((i + 1) / n);
+    await yieldUI();
+  }
+  return await packDocx(D, new D.Document({ creator: 'Watermark Studio', sections }));
+}
+
+/* ---- PDF → Word (editable text) ---- */
+async function pdfToDocxText(doc, onP) {
+  const D = await loadLib('docx');
+  const pdf = doc.pdf, n = doc.pageCount;
+  const pages = [];
+  const sizes = [];
+  for (let p = 1; p <= n; p++) {
+    checkCancel();
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    const lines = [];
+    for (const it of tc.items) {
+      if (!it.str || !it.str.trim() && !it.hasEOL) { if (!it.str) continue; }
+      const x = it.transform[4], y = it.transform[5];
+      const size = Math.hypot(it.transform[2], it.transform[3]) || it.height || 10;
+      sizes.push(size);
+      let line = lines.find(l => Math.abs(l.y - y) < size * 0.45);
+      if (!line) { line = { y, size, items: [] }; lines.push(line); }
+      line.items.push({ x, w: it.width, str: it.str, size, bold: /bold|black|heavy/i.test(it.fontName || '') || /bold/i.test((tc.styles[it.fontName] || {}).fontFamily || '') });
+      line.size = Math.max(line.size, size);
+    }
+    lines.sort((a, b) => b.y - a.y);
+    for (const l of lines) {
+      l.items.sort((a, b) => a.x - b.x);
+      let text = '', end = null;
+      for (const it of l.items) {
+        if (end !== null && it.x - end > it.size * 0.18 && !text.endsWith(' ') && !it.str.startsWith(' ')) text += ' ';
+        text += it.str;
+        end = it.x + it.w;
+      }
+      l.text = text.replace(/\s+/g, ' ').trim();
+      l.bold = l.items.every(it => it.bold);
+    }
+    pages.push(lines.filter(l => l.text));
+    if (onP) onP(p / n * 0.8);
+  }
+  sizes.sort((a, b) => a - b);
+  const body = sizes.length ? sizes[Math.floor(sizes.length / 2)] : 11;
+  const children = [];
+  pages.forEach((lines, pi) => {
+    const paras = [];
+    let cur = null;
+    lines.forEach((l, k) => {
+      const prev = lines[k - 1];
+      const heading = l.size > body * 1.25;
+      const gap = prev ? prev.y - l.y : 0;
+      const newPara = !cur || heading !== cur.heading || gap > prev.size * 1.75 || Math.abs(l.size - cur.size) > 1.5;
+      if (newPara) { cur = { text: l.text, size: l.size, heading, bold: l.bold }; paras.push(cur); }
+      else cur.text += (cur.text.endsWith('-') ? '' : ' ') + l.text;
+    });
+    if (!paras.length) paras.push({ text: `(Page ${pi + 1} has no selectable text — it may be a scanned image. Try “Word – looks the same” instead.)`, size: body, note: true });
+    paras.forEach((p, k) => children.push(new D.Paragraph({
+      pageBreakBefore: pi > 0 && k === 0,
+      spacing: { after: p.heading ? 160 : 120 },
+      children: [new D.TextRun({ text: p.text, bold: p.heading || p.bold, italics: !!p.note, size: Math.round(clamp(p.size, 7, 48) * 2), color: p.note ? '888888' : undefined })],
+    })));
+  });
+  const { w, h } = doc.pageSizes[0];
+  let bytes = await packDocx(D, new D.Document({ creator: 'Watermark Studio', styles: { default: { document: { run: { font: 'Calibri' } } } }, sections: [{ properties: docxPage(D, w, h, 56), children }] }));
+  const s = settingsFor(doc);
+  if (markedCount(doc) > 0 && hasWatermark(s)) bytes = await watermarkDocxBytes(bytes, s, infoFor(doc, 0, { noPages: true }));
+  if (onP) onP(1);
+  return bytes;
+}
+
+/* ---- Text → Word ---- */
+async function txtToDocx(doc) {
+  const D = await loadLib('docx');
+  const children = doc.txtLines.map(t => new D.Paragraph({ spacing: { after: 0 }, children: [new D.TextRun({ text: t.replace(/\t/g, '    '), font: 'Consolas', size: 21 })] }));
+  let bytes = await packDocx(D, new D.Document({ creator: 'Watermark Studio', sections: [{ properties: docxPage(D, 595.28, 841.89, 56), children }] }));
+  const s = settingsFor(doc);
+  if (markedCount(doc) > 0 && hasWatermark(s)) bytes = await watermarkDocxBytes(bytes, s, infoFor(doc, 0, { noPages: true }));
+  return bytes;
+}
+
+/* ---- Main output switch ---- */
+async function buildOutputs(doc, onP) {
+  const s = settingsFor(doc);
+  await ensureFont(s);
+  const base = baseName(doc.name) + state.out.suffix;
+  const f = doc.format;
+  const pdfFile = bytes => [{ name: base + '.pdf', blob: new Blob([bytes], { type: 'application/pdf' }) }];
+  const docxFile = bytes => [{ name: base + '.docx', blob: new Blob([bytes], { type: DOCX_MIME }) }];
+  switch (doc.kind) {
+    case 'pdf':
+      if (f === 'keep') return pdfFile(await watermarkPdfBytes(doc, onP));
+      if (f === 'png' || f === 'jpg') return pagesToImages(doc, f, base, onP);
+      if (f === 'docx-image') return docxFile(await pdfToDocxImages(doc, onP));
+      if (f === 'docx-text') return docxFile(await pdfToDocxText(doc, onP));
+      break;
+    case 'image':
+    case 'svg': {
+      if (f === 'pdf') return pdfFile(await imagesToPdfBytes([doc], onP));
+      if (doc.kind === 'svg' && f === 'keep') return [{ name: base + '.svg', blob: new Blob([svgWithWatermark(doc)], { type: 'image/svg+xml' }) }];
+      const ext = f === 'keep' ? doc.ext : f;
+      let c = await renderedPage(doc, 0, doc.kind === 'svg' ? svgScale(doc) : 1);
+      if (MIME[ext] === 'image/jpeg') c = whiteBg(c);
+      return [{ name: `${base}.${ext}`, blob: await canvasToBlob(c, MIME[ext], jpgQ()) }];
+    }
+    case 'docx':
+      if (f === 'keep') return [{ name: base + '.docx', blob: new Blob([await watermarkDocxBytes(doc.bytes, s, infoFor(doc, 0, { noPages: true }))], { type: DOCX_MIME }) }];
+      if (f === 'pdf') return pdfFile(await renderedPdfBytes(doc, onP));
+      if (f === 'png') return pagesToImages(doc, 'png', base, onP);
+      break;
+    case 'pptx':
+      if (f === 'keep') return [{ name: base + '.pptx', blob: new Blob([await watermarkPptxBytes(doc, onP)], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }) }];
+      if (f === 'pdf') return pdfFile(await renderedPdfBytes(doc, onP));
+      if (f === 'png') return pagesToImages(doc, 'png', base, onP);
+      break;
+    case 'txt':
+      if (f === 'pdf') return pdfFile(await renderedPdfBytes(doc, onP));
+      if (f === 'docx') return docxFile(await txtToDocx(doc));
+      if (f === 'png') return pagesToImages(doc, 'png', base, onP);
+      break;
+  }
+  throw new UserError('This output format is not available for this file.');
+}
+function svgWithWatermark(doc) {
+  const { w, h } = doc.pageSizes[0];
+  const s = settingsFor(doc);
+  let inner = doc.svgText.replace(/<\?xml[^>]*\?>/, '').replace(/<!DOCTYPE[^>]*>/i, '');
+  inner = inner.replace(/<svg\b/, '<svg x="0" y="0"');
+  if (!pageIsMarked(doc, 0) || !hasWatermark(s)) return doc.svgText;
+  const url = renderLayer(w, h, s, infoFor(doc, 0)).toDataURL('image/png');
+  const img = `<image x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" href="${url}" xlink:href="${url}"/>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${s.layer === 'under' ? img + inner : inner + img}</svg>`;
+}
+/** Any file as PDF pages (used when combining into one PDF). */
+async function docAsPdfBytes(doc, onP) {
+  if (doc.kind === 'pdf') return watermarkPdfBytes(doc, onP);
+  if (doc.kind === 'image' || doc.kind === 'svg') return imagesToPdfBytes([doc], onP);
+  return renderedPdfBytes(doc, onP);
+}
+
+/* =====================================================================
+   8. EXPORT FLOW
+   ===================================================================== */
+let lastResults = [];
+let exporting = false;
+function openExport() {
+  const ready = state.docs.filter(d => d.status === 'ready');
+  if (!ready.length) { toast('Add at least one file first.'); return; }
+  $('#xMerge').checked = state.out.merge;
+  $('#xResults').innerHTML = '';
+  $('#xProgressWrap').hidden = true;
+  $('#xZip').hidden = true;
+  $('#xStart').hidden = false;
+  $('#xStart').textContent = 'Start export';
+  lastResults = [];
+  renderExportList();
+  $('#exportDlg').showModal();
+  updateSteps();
+}
+function renderExportList(status = {}) {
+  const ready = state.docs.filter(d => d.status === 'ready');
+  const bad = state.docs.filter(d => d.status === 'error');
+  const merge = state.out.merge;
+  $('#xMergeHint').textContent = merge ? `All ${ready.length} file${ready.length === 1 ? '' : 's'} will become one PDF, in the order of your file list. Word and PowerPoint pages are redrawn as pictures.` : 'Each file is exported on its own, in the format you pick below.';
+  $('#xList').innerHTML = ready.map(d => {
+    const st = status[d.id];
+    const icon = !st ? '' : st.state === 'busy' ? '<span class="spin"></span>' : st.state === 'ok' ? '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5 10 17l9-10"/></svg>' : '<svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    const fmt = formatsFor(d).find(f => f.v === d.format) || formatsFor(d)[0];
+    const sub = st && st.state === 'err' ? `<div class="sub bad">${escapeHtml(st.msg)}</div>` :
+      `<div class="sub">${wordKeep(d) ? 'All pages' : d.pageCount === 1 ? (markedCount(d) ? '1 page' : 'No watermark') : `${markedCount(d)} of ${d.pageCount} ${d.kind === 'pptx' ? 'slides' : 'pages'}`} · ${merge ? 'PDF pages' : qText(fmt.q)}</div>`;
+    return `<div class="xrow"><div style="min-width:0"><div class="nm" title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</div>${sub}</div>
+      <select data-xfmt="${d.id}" ${merge || exporting ? 'disabled' : ''} aria-label="Output format for ${escapeHtml(d.name)}">${formatsFor(d).map(f => `<option value="${f.v}" ${f.v === d.format ? 'selected' : ''}>${f.label}</option>`).join('')}</select>
+      <span class="st ${st ? (st.state === 'ok' ? 'ok' : st.state === 'err' ? 'err' : '') : ''}">${icon}</span></div>`;
+  }).join('') + (bad.length ? `<p class="hint warn">${bad.length} file${bad.length === 1 ? '' : 's'} can't be used and will be skipped.</p>` : '');
+  $$('[data-xfmt]').forEach(sel => sel.onchange = () => {
+    const d = state.docs.find(x => x.id === +sel.dataset.xfmt);
+    d.format = sel.value;
+    if (d === activeDoc()) formatChanged(d); else { renderFileList(); updateBottom(); }
+    renderExportList(status);
+  });
+}
+function qText(q) { return q === 'best' ? 'Best results' : q === 'good' ? 'Good quality' : 'Basic quality'; }
+async function startExport() {
+  const docs = state.docs.filter(d => d.status === 'ready');
+  if (!docs.length || exporting) return;
+  exporting = true; cancelRequested = false;
+  $('#xStart').hidden = true; $('#xZip').hidden = true; $('#xCancel').hidden = false; $('#xClose').disabled = true;
+  $('#xMerge').disabled = true;
+  $('#xProgressWrap').hidden = false;
+  $('#xResults').innerHTML = '';
+  lastResults = [];
+  const status = {};
+  const bar = $('#xBar'), label = $('#xLabel');
+  const setP = (k, frac, name) => { bar.style.width = (((k + clamp(frac, 0, 1)) / docs.length) * 100).toFixed(1) + '%'; label.textContent = `Working on ${k + 1} of ${docs.length}: ${name}`; };
+  try {
+    // make sure the core tools are ready before starting
+    await loadLib('pdflib');
+    if (state.out.merge) {
+      const { PDFDocument } = PDFLib;
+      const merged = await PDFDocument.create();
+      for (let k = 0; k < docs.length; k++) {
+        const d = docs[k];
+        if (cancelRequested) break;
+        status[d.id] = { state: 'busy' }; renderExportList(status);
+        setP(k, 0, d.name);
+        try {
+          const bytes = await docAsPdfBytes(d, f => setP(k, f, d.name));
+          const src = await PDFDocument.load(bytes);
+          const copied = await merged.copyPages(src, src.getPageIndices());
+          copied.forEach(p => merged.addPage(p));
+          status[d.id] = { state: 'ok' };
+        } catch (e) { status[d.id] = { state: 'err', msg: friendlyError(e) }; }
+        renderExportList(status);
+        await yieldUI();
+      }
+      if (merged.getPageCount()) {
+        const name = (docs.length === 1 ? baseName(docs[0].name) : 'combined') + state.out.suffix + '.pdf';
+        lastResults.push({ title: name, files: [{ name, blob: new Blob([await merged.save()], { type: 'application/pdf' }) }] });
+      }
+    } else {
+      for (let k = 0; k < docs.length; k++) {
+        const d = docs[k];
+        if (cancelRequested) break;
+        status[d.id] = { state: 'busy' }; renderExportList(status);
+        setP(k, 0, d.name);
+        try {
+          const files = await buildOutputs(d, f => setP(k, f, d.name));
+          lastResults.push({ title: files.length === 1 ? files[0].name : `${baseName(d.name)}${state.out.suffix} (${files.length} files)`, files, base: baseName(d.name) + state.out.suffix });
+          status[d.id] = { state: 'ok' };
+        } catch (e) {
+          status[d.id] = { state: 'err', msg: friendlyError(e) };
+          lastResults.push({ title: d.name, error: friendlyError(e) });
+        }
+        renderExportList(status);
+        await yieldUI();
+      }
+    }
+  } catch (e) {
+    toast(friendlyError(e), 'bad', 6000);
+  }
+  bar.style.width = '100%';
+  const ok = lastResults.filter(r => r.files).length, failed = lastResults.filter(r => r.error).length + (state.out.merge ? Object.values(status).filter(s => s.state === 'err').length : 0);
+  label.textContent = cancelRequested ? 'Stopped. Files finished so far are below.' : `Done. ${ok} ready${failed ? `, ${failed} with problems` : ''}.`;
+  renderResults();
+  exporting = false;
+  $('#xCancel').hidden = true; $('#xClose').disabled = false; $('#xMerge').disabled = false;
+  $('#xStart').hidden = false; $('#xStart').textContent = 'Export again';
+  $('#xZip').hidden = !lastResults.some(r => r.files) || (lastResults.length === 1 && lastResults[0].files && lastResults[0].files.length === 1);
+  renderExportList(status);
+}
+function renderResults() {
+  const box = $('#xResults');
+  box.innerHTML = lastResults.map((r, i) => r.error ?
+    `<div class="res err"><svg class="i" viewBox="0 0 24 24" style="color:var(--bad)"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v6M12 16.5h.01"/></svg><div class="nm">${escapeHtml(r.title)} — ${escapeHtml(r.error)}</div></div>` :
+    `<div class="res"><svg class="i" viewBox="0 0 24 24" style="color:var(--good)"><path d="M5 12.5 10 17l9-10"/></svg><div class="nm" title="${escapeHtml(r.title)}">${escapeHtml(r.title)}</div><span class="sz">${fmtSize(r.files.reduce((a, f) => a + f.blob.size, 0))}</span><button class="btn small primary" data-dl="${i}">Download</button></div>`).join('');
+  $$('[data-dl]', box).forEach(b => b.onclick = async () => {
+    const r = lastResults[+b.dataset.dl];
+    if (r.files.length === 1) downloadBlob(r.files[0].blob, r.files[0].name);
+    else {
+      b.disabled = true;
+      try { downloadBlob(await zipFiles(r.files.map(f => ({ path: f.name, blob: f.blob }))), (r.base || 'pages') + '.zip'); }
+      catch (e) { toast(friendlyError(e), 'bad'); }
+      b.disabled = false;
+    }
+  });
+}
+async function zipFiles(entries) {
+  const JSZip = await loadLib('jszip');
+  const zip = new JSZip();
+  const used = new Set();
+  for (const e of entries) {
+    let p = e.path, n = 2;
+    while (used.has(p.toLowerCase())) { const ext = extOf(e.path); p = `${baseName(e.path)} (${n++})${ext ? '.' + ext : ''}`; }
+    used.add(p.toLowerCase());
+    zip.file(p, e.blob);
+  }
+  return await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+}
+async function downloadAllZip() {
+  const entries = [];
+  for (const r of lastResults) {
+    if (!r.files) continue;
+    if (r.files.length === 1) entries.push({ path: r.files[0].name, blob: r.files[0].blob });
+    else for (const f of r.files) entries.push({ path: `${r.base}/${f.name}`, blob: f.blob });
+  }
+  if (!entries.length) return;
+  const btn = $('#xZip');
+  btn.disabled = true;
+  try { downloadBlob(await zipFiles(entries), `watermarked_${todayStr()}.zip`); }
+  catch (e) { toast(friendlyError(e), 'bad'); }
+  btn.disabled = false;
+}
+
+/* =====================================================================
+   9. THEME, KEYBOARD, DRAG & DROP, INIT
+   ===================================================================== */
+const THEME_ICONS = {
+  system: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg>',
+  light: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  dark: '<svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
+};
+function applyTheme(t) {
+  if (t === 'system') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+  $('#themeBtn').innerHTML = THEME_ICONS[t];
+  $('#themeBtn').title = `Theme: ${t === 'system' ? 'follows your device' : t} (click to change)`;
+}
+function initTheme() {
+  let t = store.get('theme', 'system');
+  applyTheme(t);
+  $('#themeBtn').onclick = () => {
+    t = t === 'system' ? 'light' : t === 'light' ? 'dark' : 'system';
+    applyTheme(t); store.set('theme', t);
+    toast(t === 'system' ? 'Theme follows your device' : `${t[0].toUpperCase() + t.slice(1)} theme`);
+  };
+}
+function isTyping(e) { const t = e.target; return t && (t.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color'].includes(t.type) || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
+function initKeyboard() {
+  document.addEventListener('keydown', e => {
+    const mod = e.ctrlKey || e.metaKey;
+    const k = e.key.toLowerCase();
+    if (mod && k === 'z' && !e.shiftKey) { if (isTyping(e)) return; e.preventDefault(); undo(); return; }
+    if (mod && (k === 'y' || (k === 'z' && e.shiftKey))) { if (isTyping(e)) return; e.preventDefault(); redo(); return; }
+    if (mod && k === 'o') { e.preventDefault(); $('#fileInput').click(); return; }
+    if (mod && k === 'e') { e.preventDefault(); openExport(); return; }
+    if (mod || e.altKey || isTyping(e) || document.querySelector('dialog[open]')) return;
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goPage(state.page - 1); }
+    else if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goPage(state.page + 1); }
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      const i = state.docs.findIndex(d => d.id === state.activeId);
+      const j = clamp(i + (e.key === 'ArrowUp' ? -1 : 1), 0, state.docs.length - 1);
+      if (state.docs[j] && j !== i) { e.preventDefault(); selectDoc(state.docs[j].id); }
+    }
+    else if (e.key === 'Home') goPage(0);
+    else if (e.key === 'End') { const d = activeDoc(); if (d) goPage(d.pageCount - 1); }
+    else if (e.key === '+' || e.key === '=') setZoom(state.zoom * 1.25);
+    else if (e.key === '-' || e.key === '_') setZoom(state.zoom / 1.25);
+    else if (e.key === '0') setZoom(1);
+    else if (k === 'b') { state.before = !state.before; schedulePreview(); }
+    else if (k === 'w') togglePageMark(state.page);
+    else if (e.key === '?') $('#helpDlg').showModal();
+  });
+}
+function initDrop() {
+  let depth = 0;
+  const veil = $('#dropVeil');
+  const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+  window.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); depth++; veil.classList.add('show'); });
+  window.addEventListener('dragleave', e => { if (!hasFiles(e)) return; depth = Math.max(0, depth - 1); if (!depth) veil.classList.remove('show'); });
+  window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+  window.addEventListener('drop', e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); depth = 0; veil.classList.remove('show');
+    addFiles(e.dataTransfer.files);
+  });
+  window.addEventListener('paste', e => {
+    if (isTyping(e)) return;
+    const files = [...(e.clipboardData ? e.clipboardData.files : [])];
+    if (files.length) { e.preventDefault(); addFiles(files.map((f, i) => f.name && f.name !== 'image.png' ? f : new File([f], `pasted-${todayStr()}-${i + 1}.${(f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`, { type: f.type }))); }
+  });
+}
+function init() {
+  buildStaticUI();
+  initTheme();
+  bindSettings();
+  initKeyboard();
+  initDrop();
+  initReorder();
+  renderPresets();
+  // file picking
+  const pick = () => $('#fileInput').click();
+  $('#drop').onclick = pick;
+  $('#drop').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } };
+  $('#emptyAdd').onclick = pick;
+  $('#fileInput').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+  $('#clearAll').onclick = () => {
+    if (!confirm(`Remove all ${state.docs.length} files from the list?`)) return;
+    for (const d of [...state.docs]) removeDoc(d.id);
+  };
+  $('#flist').addEventListener('click', e => {
+    const li = e.target.closest('.fitem');
+    if (!li) return;
+    if (e.target.closest('.rm')) { removeDoc(+li.dataset.id); return; }
+    if (e.target.closest('.grip')) return;
+    selectDoc(+li.dataset.id);
+  });
+  // preview controls
+  $('#prevPg').onclick = () => goPage(state.page - 1);
+  $('#nextPg').onclick = () => goPage(state.page + 1);
+  $('#zoomIn').onclick = () => setZoom(state.zoom * 1.25);
+  $('#zoomOut').onclick = () => setZoom(state.zoom / 1.25);
+  $('#zoomFit').onclick = () => setZoom(1);
+  $('#baBtn').onclick = () => { state.before = !state.before; schedulePreview(); };
+  $('#stage').addEventListener('wheel', e => { if (e.ctrlKey) { e.preventDefault(); setZoom(state.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1)); } }, { passive: false });
+  $('#strip').addEventListener('click', e => {
+    const th = e.target.closest('.th');
+    if (!th) return;
+    if (e.target.closest('.mk')) togglePageMark(+th.dataset.i);
+    else goPage(+th.dataset.i);
+  });
+  new ResizeObserver(debounce(schedulePreview, 60)).observe($('#stage'));
+  // steps
+  $$('.step').forEach(b => b.onclick = () => {
+    const s = b.dataset.step;
+    if (s === '1') { setView('files'); if (!state.docs.length) pick(); }
+    else if (s === '2') { if (state.docs.length) setView('design'); else toast('Add files first.'); }
+    else openExport();
+  });
+  // export dialog
+  $('#exportBtn').onclick = openExport;
+  $('#xStart').onclick = startExport;
+  $('#xCancel').onclick = () => { cancelRequested = true; $('#xLabel').textContent = 'Stopping after the current step…'; };
+  $('#xZip').onclick = downloadAllZip;
+  $('#xMerge').onchange = e => { state.out.merge = e.target.checked; renderExportList(); };
+  $$('dialog [data-close]').forEach(b => b.onclick = () => { if (!exporting) b.closest('dialog').close(); });
+  $('#exportDlg').addEventListener('cancel', e => { if (exporting) e.preventDefault(); });
+  $('#exportDlg').addEventListener('close', updateSteps);
+  $('#helpBtn').onclick = () => $('#helpDlg').showModal();
+  $('#undoBtn').onclick = undo;
+  $('#redoBtn').onclick = redo;
+  if (document.fonts) document.fonts.addEventListener('loadingdone', () => { schedulePreview(); refreshThumbs(); });
+  ensureFont(state.global);
+  commitHistory();
+  setView('files');
+  renderAll();
+  // warm up the core tools in the background so the first file opens quickly
+  setTimeout(() => { getPdfjs().catch(() => { }); loadLib('pdflib').catch(() => { }); loadLib('jszip').catch(() => { }); }, 300);
+  window.addEventListener('beforeunload', e => { if (exporting) { e.preventDefault(); e.returnValue = ''; } });
+}
+init();
+</script>
+</body>
+</html>
